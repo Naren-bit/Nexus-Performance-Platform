@@ -8,7 +8,7 @@
 
 ## 🚀 Live Demo & Repository
 - **Source Code Repository**: [https://github.com/Naren-bit/Nexus-Performance-Platform.git](https://github.com/Naren-bit/Nexus-Performance-Platform.git)
-- **Live Hosted URL**: *(Insert Vercel/Netlify URL here)*
+- **Live Hosted URL**: *https://atomquest-portal-10492.web.app/*
 
 ---
 

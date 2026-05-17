@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { logout } from '../lib/auth';
+import { LayoutDashboard, Target, CheckSquare, TrendingUp, LogOut } from 'lucide-react';
 
 export default function Sidebar() {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ export default function Sidebar() {
           to={`/dashboard-${user.role}`} 
           className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
         >
-          <span className="link-icon">📊</span> Dashboard
+          <span className="link-icon"><LayoutDashboard size={18} /></span> Dashboard
         </NavLink>
         
         {user.role === 'employee' && (
@@ -31,13 +32,13 @@ export default function Sidebar() {
               to="/goals-create" 
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             >
-              <span className="link-icon">🎯</span> My Goals
+              <span className="link-icon"><Target size={18} /></span> My Goals
             </NavLink>
             <NavLink 
               to="/checkin" 
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             >
-              <span className="link-icon">📝</span> Check-ins
+              <span className="link-icon"><CheckSquare size={18} /></span> Check-ins
             </NavLink>
           </>
         )}
@@ -46,12 +47,12 @@ export default function Sidebar() {
           to="/analytics" 
           className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
         >
-          <span className="link-icon">📈</span> Analytics
+          <span className="link-icon"><TrendingUp size={18} /></span> Analytics
         </NavLink>
         
         <div className="sidebar-section-title">Account</div>
         <a href="#" className="sidebar-link btn-logout" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-          <span className="link-icon">🚪</span> Sign Out
+          <span className="link-icon"><LogOut size={18} /></span> Sign Out
         </a>
       </nav>
     </aside>

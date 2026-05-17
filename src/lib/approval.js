@@ -1,18 +1,26 @@
 import { db, doc, updateDoc, writeBatch, collection, serverTimestamp } from './firebase-config.js';
 
-export async function approveGoalSheet(sheetId, managerId, comment = '') {
+export async function approveGoalSheet(sheetId, managerId, comment = '', updatedGoals = null, totalWeightage = null) {
   try {
     const batch = writeBatch(db);
 
-    // 1. Lock the goal sheet
+    // 1. Lock the goal sheet and potentially update goals if inline edits were made
     const sheetRef = doc(db, 'goalSheets', sheetId);
-    batch.update(sheetRef, {
+    
+    const updateData = {
       status: 'approved',
       approvedAt: serverTimestamp(),
       approvedBy: managerId,
       lockedAt: serverTimestamp(),
       managerComment: comment
-    });
+    };
+    
+    if (updatedGoals) {
+      updateData.goals = updatedGoals;
+      updateData.totalWeightage = totalWeightage;
+    }
+
+    batch.update(sheetRef, updateData);
 
     // 2. Write audit log
     const auditRef = doc(collection(db, 'auditLog'));

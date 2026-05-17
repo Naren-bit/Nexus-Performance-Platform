@@ -1031,3 +1031,80 @@
 .toast-error { border-left-color: var(--accent-danger); }
 .toast-warn { border-left-color: var(--accent-warn); }
 
+/* ---------- Table Row Hover ---------- */
+.data-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(91, 95, 255, 0.06);
+}
+
+/* ---------- Badge Pulse Animations ---------- */
+.badge-approved {
+  background: rgba(0, 212, 170, 0.15);
+  color: #00D4AA;
+  border: 1px solid rgba(0, 212, 170, 0.3);
+}
+
+.badge-submitted {
+  background: rgba(91, 95, 255, 0.15);
+  color: #5B5FFF;
+  border: 1px solid rgba(91, 95, 255, 0.3);
+  animation: pulse-submitted 2.5s infinite;
+}
+
+@keyframes pulse-submitted {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(91, 95, 255, 0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(91, 95, 255, 0); }
+}
+
+.badge-draft {
+  background: rgba(255, 165, 2, 0.15);
+  color: #FFA502;
+  border: 1px solid rgba(255, 165, 2, 0.3);
+}
+
+.badge-returned {
+  background: rgba(255, 71, 87, 0.15);
+  color: #FF4757;
+  border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+.badge-not-started {
+  background: rgba(74, 74, 106, 0.15);
+  color: #8888AA;
+  border: 1px solid rgba(74, 74, 106, 0.3);
+}
+
+.badge-info {
+  background: rgba(91, 95, 255, 0.15);
+  color: #5B5FFF;
+  border: 1px solid rgba(91, 95, 255, 0.3);
+}
+
+/* ---------- Card Glassmorphism ---------- */
+.card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ---------- Enhanced Navbar Glassmorphism ---------- */
+.navbar {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ---------- Sidebar Glassmorphism ---------- */
+.sidebar {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(17, 17, 24, 0.85);
+}
+
+/* ---------- Confirm Dialog ---------- */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(0, 212, 170, 0); }
+}
+

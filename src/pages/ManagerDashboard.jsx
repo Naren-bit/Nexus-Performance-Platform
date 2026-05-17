@@ -5,7 +5,7 @@ import { getTeamMembers, getTeamGoalSheets, pushSharedGoalToTeam } from '../lib/
 import { approveGoalSheet, returnGoalSheet } from '../lib/approval';
 import { getCheckins, completeCheckin } from '../lib/checkin';
 import { isWindowOpen, getScoreColor, formatScore, timeAgo, THRUST_AREAS } from '../lib/utils';
-import { Users, FileCheck, Target, MessageSquare, ArrowRight, X } from 'lucide-react';
+import { Users, FileCheck, Target, MessageSquare, ArrowRight, X, CheckCircle2, CornerDownLeft, Lock } from 'lucide-react';
 
 export default function ManagerDashboard() {
   const { user, cycle } = useAuth();
@@ -23,7 +23,21 @@ export default function ManagerDashboard() {
   
   // Shared Goals State
   const [showSharedModal, setShowSharedModal] = useState(false);
-  const [sharedGoalForm, setSharedGoalForm] = useState({ title: '', thrustArea: '', description: '', uom: 'numeric', uomDirection: 'max', target: '' });
+  const [sharedGoalForm, setSharedGoalForm] = useState({
+    title: '', thrustArea: '', description: '', uom: 'numeric', uomDirection: 'max', target: ''
+  });
+
+  // Escape key to close modals
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setShowSharedModal(false);
+        setSelectedMember(null); // Also close the sliding panel if user presses Esc
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   const loadData = async () => {
     if (user && cycle) {
@@ -58,7 +72,12 @@ export default function ManagerDashboard() {
 
   const handleApprove = async (sheetId) => {
     try {
-      await approveGoalSheet(sheetId, user.uid, reviewComment);
+      const totalWeightage = selectedSheet.goals.reduce((s,g) => s + (Number(g.weightage)||0), 0);
+      if (totalWeightage !== 100) {
+        showToast(`Cannot approve: Total weightage is ${totalWeightage}% (must be 100%)`, 'error');
+        return;
+      }
+      await approveGoalSheet(sheetId, user.uid, reviewComment, selectedSheet.goals, totalWeightage);
       showToast('Goals approved successfully.', 'success');
       setReviewComment('');
       setSelectedMember(null);
@@ -66,6 +85,14 @@ export default function ManagerDashboard() {
     } catch(e) {
       showToast('Error approving goals.', 'error');
     }
+  };
+
+  const handleInlineEdit = (goalIndex, field, value) => {
+    if (!selectedSheet || selectedSheet.status !== 'submitted') return;
+    
+    const newGoals = [...selectedSheet.goals];
+    newGoals[goalIndex] = { ...newGoals[goalIndex], [field]: value };
+    setSelectedSheet({ ...selectedSheet, goals: newGoals });
   };
 
   const handleReturn = async (sheetId) => {
@@ -112,7 +139,13 @@ export default function ManagerDashboard() {
     }
   };
 
-  if (loading) return <div className="empty-state"><div className="spinner"></div></div>;
+  if (loading) return (
+    <div className="animate-fade-in" style={{ paddingBottom: '40px' }}>
+      <div className="page-header"><div><div className="skeleton skeleton-title" style={{ width: '220px' }}></div><div className="skeleton skeleton-text" style={{ width: '250px' }}></div></div></div>
+      <div className="grid grid-4 gap-md" style={{ marginBottom: '24px' }}>{[1,2,3,4].map(i => <div key={i} className="card card-stat"><div className="skeleton" style={{ height: '60px' }}></div></div>)}</div>
+      <div className="card" style={{ minHeight: '300px' }}><div className="skeleton" style={{ height: '100%' }}></div></div>
+    </div>
+  );
 
   const filteredTeam = filter === 'all' ? team : team.filter(m => {
     const s = sheets.find(sh => sh.employeeId === m.uid);
@@ -244,22 +277,74 @@ export default function ManagerDashboard() {
               ) : (
                 <>
                   <div style={{ marginBottom: '24px' }}>
-                    <h5 style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Goal Sheet</h5>
-                    {selectedSheet.goals.map((g, i) => (
-                      <div key={i} style={{ padding: '16px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '12px', background: 'var(--bg-secondary)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <strong style={{ color: 'var(--text-primary)' }}>{g.title}</strong>
-                          {getStatusBadge(g.status || 'not_started')}
-                        </div>
-                        <div className="grid grid-4 gap-sm" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                          <div>Thrust: <span className="text-mono">{g.thrustArea}</span></div>
-                          <div>UoM: <span className="text-mono">{g.uom} {g.uomDirection ? `(${g.uomDirection})` : ''}</span></div>
-                          <div>Target: <span className="text-mono">{g.target ?? '—'}</span></div>
-                          <div>Weight: <span className="text-mono text-primary">{g.weightage}%</span></div>
-                        </div>
-                        {g.description && <p style={{ fontSize: '0.85rem', marginTop: '8px', color: 'var(--text-muted)' }}>{g.description}</p>}
-                      </div>
-                    ))}
+                    <h5 style={{ marginBottom: '16px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Target size={16}/> Goal Sheet — {selectedSheet.goals.length} Goals · {selectedSheet.goals.reduce((s,g) => s + (Number(g.weightage)||0), 0)}% Total
+                    </h5>
+                    <div className="table-container" style={{ border: 'none' }}>
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Thrust Area</th>
+                            <th>Goal Title</th>
+                            <th>UoM</th>
+                            <th className="text-right">Target</th>
+                            <th className="text-right">Weightage</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedSheet.goals.map((g, i) => (
+                            <tr key={i}>
+                              <td style={{ fontSize: '0.82rem' }}>{g.thrustArea}</td>
+                              <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                {g.title}
+                                {g.isShared && <span className="badge badge-info" style={{ fontSize: '0.6rem', marginLeft: '8px' }}>SHARED</span>}
+                              </td>
+                              <td className="text-mono" style={{ fontSize: '0.82rem' }}>{g.uom} {g.uomDirection ? `(${g.uomDirection})` : ''}</td>
+                              <td className="text-right text-mono">
+                                {selectedSheet.status === 'submitted' && !g.isShared && g.uom !== 'zero' ? (
+                                  <input 
+                                    type={g.uom === 'timeline' ? 'date' : 'number'}
+                                    value={g.target || ''}
+                                    onChange={(e) => handleInlineEdit(i, 'target', e.target.value)}
+                                    style={{ width: '80px', padding: '2px 4px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--text-primary)', borderRadius: '4px', textAlign: 'right' }}
+                                  />
+                                ) : (
+                                  g.target ?? '—'
+                                )}
+                              </td>
+                              <td className="text-right">
+                                {selectedSheet.status === 'submitted' && !g.isShared ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                                    <input 
+                                      type="number"
+                                      value={g.weightage || ''}
+                                      onChange={(e) => handleInlineEdit(i, 'weightage', Number(e.target.value))}
+                                      style={{ width: '50px', padding: '2px 4px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'var(--accent-primary)', borderRadius: '4px', textAlign: 'right', fontWeight: 'bold' }}
+                                    />
+                                    <span style={{ color: 'var(--text-muted)' }}>%</span>
+                                    <span style={{ cursor: 'help' }} title="Manager inline edit">✏️</span>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <span className="text-mono" style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>{g.weightage}%</span>
+                                    {selectedSheet.status === 'approved' ? <Lock size={12} style={{ marginLeft: '6px', color: 'var(--text-muted)' }}/> : null}
+                                  </>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td colSpan="4" style={{ textAlign: 'right', fontWeight: 700 }}>Total Weightage:</td>
+                            <td className="text-right text-mono" style={{ fontWeight: 800, color: selectedSheet.goals.reduce((s,g) => s + (Number(g.weightage)||0), 0) === 100 ? '#00D4AA' : '#FF4757' }}>
+                              {selectedSheet.goals.reduce((s,g) => s + (Number(g.weightage)||0), 0)}%
+                              {selectedSheet.goals.reduce((s,g) => s + (Number(g.weightage)||0), 0) === 100 ? ' ✓' : ''}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
                   </div>
 
                   {/* Approval Actions */}
@@ -274,8 +359,8 @@ export default function ManagerDashboard() {
                         style={{ marginBottom: '16px', background: 'var(--bg-card)' }}
                       />
                       <div style={{ display: 'flex', gap: '12px' }}>
-                        <button className="btn btn-success" onClick={() => handleApprove(selectedSheet.id)}>✅ Approve Goals</button>
-                        <button className="btn btn-warn" onClick={() => handleReturn(selectedSheet.id)}>↩ Return for Rework</button>
+                        <button className="btn btn-success" onClick={() => handleApprove(selectedSheet.id)}><CheckCircle2 size={16}/> Approve Goals</button>
+                        <button className="btn btn-warn" onClick={() => handleReturn(selectedSheet.id)}><CornerDownLeft size={16}/> Return for Rework</button>
                       </div>
                     </div>
                   )}

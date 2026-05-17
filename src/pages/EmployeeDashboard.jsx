@@ -21,7 +21,16 @@ export default function EmployeeDashboard() {
     loadData();
   }, [user, cycle]);
 
-  if (loading) return <div className="empty-state"><div className="spinner"></div></div>;
+  if (loading) return (
+    <div className="animate-fade-in">
+      <div className="page-header"><div><div className="skeleton skeleton-title" style={{ width: '250px' }}></div><div className="skeleton skeleton-text" style={{ width: '200px' }}></div></div></div>
+      <div className="card" style={{ display: 'flex', gap: '32px', marginBottom: '24px', padding: '24px' }}>
+        <div style={{ flex: 1 }}><div className="skeleton skeleton-title"></div><div className="skeleton skeleton-text"></div><div className="skeleton" style={{ height: '32px', width: '120px', marginTop: '12px' }}></div></div>
+        <div className="skeleton" style={{ width: '120px', height: '120px', borderRadius: '50%' }}></div>
+      </div>
+      <div className="grid grid-3 gap-md" style={{ marginBottom: '24px' }}>{[1,2,3].map(i => <div key={i} className="card card-stat"><div className="skeleton" style={{ height: '60px' }}></div></div>)}</div>
+    </div>
+  );
 
   const goals = sheet?.goals || [];
   const totalWeightage = goals.reduce((sum, g) => sum + (Number(g.weightage) || 0), 0);
@@ -42,11 +51,11 @@ export default function EmployeeDashboard() {
     if (!cycle) return '—';
     const now = new Date();
     if (now >= new Date(cycle.goalSettingOpen) && now <= new Date(cycle.goalSettingClose)) {
-      return <span style={{ color: 'var(--accent-primary)' }}>🎯 Goal Setting</span>;
+      return <span style={{ color: 'var(--accent-primary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Target size={16} /> Goal Setting</span>;
     }
     for (const q of ['Q1','Q2','Q3','Q4']) {
       if (cycle.quarters?.[q] && isWindowOpen(cycle.quarters[q])) {
-        return <span style={{ color: 'var(--accent-secondary)' }}>📝 {q} Check-in</span>;
+        return <span style={{ color: 'var(--accent-secondary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={16} /> {q} Check-in</span>;
       }
     }
     return '—';
@@ -65,7 +74,7 @@ export default function EmployeeDashboard() {
       };
       case 'submitted': return { 
         sub: 'Goals submitted! Waiting for manager approval.', 
-        act: <span style={{ color: 'var(--text-muted)' }}>⏳ Pending manager review</span> 
+        act: <span style={{ color: 'var(--text-muted)' }}>Pending manager review</span> 
       };
       case 'approved': return { 
         sub: 'Your goals are approved and locked. Track progress via check-ins.', 
@@ -101,26 +110,25 @@ export default function EmployeeDashboard() {
           <div>{hero.act}</div>
           {status === 'returned' && sheet?.managerComment && (
             <div className="callout callout-warn" style={{ marginTop: '16px' }}>
-              <strong>📝 Manager Feedback:</strong>
+              <strong>Manager Feedback:</strong>
               <p style={{ marginTop: '4px' }}>{sheet.managerComment}</p>
             </div>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '150px' }}>
-          <div className="circular-progress">
+          <div className="circular-progress" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <svg width="120" height="120">
               <circle cx="60" cy="60" r={radius} fill="none" stroke="var(--border)" strokeWidth="8" />
-              <circle cx="60" cy="60" r={radius} fill="none" stroke="url(#gradient)" strokeWidth="8" 
+              <circle cx="60" cy="60" r={radius} fill="none" 
+                stroke={totalWeightage === 100 ? '#00D4AA' : totalWeightage > 100 ? '#FF4757' : totalWeightage >= 50 ? '#FFA502' : '#FF4757'} 
+                strokeWidth="8" 
                 strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" 
-                style={{ transition: 'stroke-dashoffset 1s ease-in-out' }} />
-              <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#5B5FFF" />
-                  <stop offset="100%" stopColor="#9B59FF" />
-                </linearGradient>
-              </defs>
+                style={{ transition: 'stroke-dashoffset 1s ease-in-out, stroke 0.5s ease' }} />
             </svg>
-            <div className="progress-text">{totalWeightage}%</div>
+            <div className="progress-text" style={{ color: totalWeightage === 100 ? '#00D4AA' : totalWeightage > 100 ? '#FF4757' : '#FFA502' }}>{totalWeightage}%</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '8px', textAlign: 'center' }}>
+              {totalWeightage === 100 ? 'Ready to submit' : totalWeightage > 100 ? 'Over limit!' : `${100 - totalWeightage}% remaining`}
+            </div>
           </div>
         </div>
       </div>

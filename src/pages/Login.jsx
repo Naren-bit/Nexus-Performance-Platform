@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, loginWithMicrosoft } from '../lib/auth';
 import { useToast } from '../components/ToastContext';
-import { Mail, Lock, LogIn, Target, Zap, ShieldAlert, ChevronRight, BarChart3, Users, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, LogIn, Target, Zap, ShieldAlert, ChevronRight, BarChart3, Users, CheckCircle2, Activity } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -11,6 +11,20 @@ export default function Login() {
   const [ssoLoading, setSsoLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [tilt, setTilt] = useState({ x: 10, y: -15 });
+
+  const handleMouseMove = (e) => {
+    const card = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - card.left - card.width / 2;
+    const y = e.clientY - card.top - card.height / 2;
+    const tiltX = -(y / card.height) * 15 + 10;
+    const tiltY = (x / card.width) * 15 - 15;
+    setTilt({ x: tiltX, y: tiltY });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 10, y: -15 });
+  };
   
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -18,7 +32,37 @@ export default function Login() {
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setShowLogin(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+
+    // Scroll Reveal Intersection Observer
+    const observerOptions = {
+      threshold: 0.15,
+      rootMargin: '0px 0px -60px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal-active');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    const revealElements = document.querySelectorAll('.scroll-reveal');
+    revealElements.forEach((el) => observer.observe(el));
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('keydown', handleEsc);
+      observer.disconnect();
+    };
   }, []);
 
   const handleLogin = async (e) => {
@@ -74,7 +118,9 @@ export default function Login() {
         transition: 'all 0.3s ease'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '36px', height: '36px', background: 'var(--gradient-accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✨</div>
+          <div style={{ width: '36px', height: '36px', background: 'var(--gradient-accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Activity size={18} color="#fff" />
+          </div>
           <span style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.5px' }}>Nexus</span>
         </div>
         <button className="btn btn-primary" onClick={() => setShowLogin(true)} style={{ padding: '10px 24px', borderRadius: '30px' }}>
@@ -89,15 +135,15 @@ export default function Login() {
           
           {/* Left Column: Text Content */}
           <div style={{ flex: '1', maxWidth: '650px' }}>
-            <div className="animate-slide-down" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,95,255,0.2)', padding: '8px 16px', borderRadius: '30px', border: '1px solid rgba(91,95,255,0.4)', marginBottom: '32px', color: '#fff', fontSize: '0.95rem', fontWeight: 600, boxShadow: '0 4px 12px rgba(91,95,255,0.3)' }}>
+            <div className="scroll-reveal" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,95,255,0.2)', padding: '8px 16px', borderRadius: '30px', border: '1px solid rgba(91,95,255,0.4)', marginBottom: '32px', color: '#fff', fontSize: '0.95rem', fontWeight: 600, boxShadow: '0 4px 12px rgba(91,95,255,0.3)' }}>
               <Zap size={16} color="#FFD700"/> Performance Management Portal
             </div>
             
-            <h1 className="animate-slide-up" style={{ fontSize: 'clamp(3rem, 5vw, 5rem)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-1px', margin: '0 0 24px 0', fontFamily: 'system-ui, sans-serif', background: 'linear-gradient(135deg, #ffffff 0%, #d0d0ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textShadow: '0 4px 20px rgba(91,95,255,0.2)' }}>
+            <h1 className="scroll-reveal delay-100" style={{ fontSize: 'clamp(3rem, 5vw, 5rem)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-1px', margin: '0 0 24px 0', fontFamily: 'system-ui, sans-serif', background: 'linear-gradient(135deg, #ffffff 0%, #d0d0ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textShadow: '0 4px 20px rgba(91,95,255,0.2)' }}>
               Align Your Team.<br/>Accelerate Performance.
             </h1>
             
-            <div className="animate-slide-up" style={{ animationDelay: '100ms' }}>
+            <div className="scroll-reveal delay-200">
               <p style={{ fontSize: '1.25rem', color: '#F8F8FF', marginBottom: '16px', lineHeight: 1.6, fontWeight: 500 }}>
                 <strong>Nexus is the centralized goal management platform.</strong>
               </p>
@@ -106,7 +152,7 @@ export default function Login() {
               </p>
             </div>
 
-            <div className="animate-slide-up" style={{ animationDelay: '200ms', display: 'flex', gap: '16px' }}>
+            <div className="scroll-reveal delay-300" style={{ display: 'flex', gap: '16px' }}>
               <button className="btn btn-primary" onClick={() => setShowLogin(true)} style={{ padding: '16px 40px', fontSize: '1.2rem', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 10px 30px rgba(91,95,255,0.5)', transition: 'all 0.3s ease', cursor: 'pointer' }}>
                 Launch Platform <ChevronRight size={20}/>
               </button>
@@ -114,12 +160,17 @@ export default function Login() {
           </div>
 
           {/* Right Column: Dashboard Mockup */}
-          <div className="animate-fade-in" style={{ flex: '1.2', animationDelay: '400ms', position: 'relative', height: '600px', perspective: '1200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div 
+            className="scroll-reveal delay-400" 
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ flex: '1.2', position: 'relative', height: '600px', perspective: '1200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
             {/* Background Decorative Glows */}
             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '400px', height: '400px', background: 'rgba(91,95,255,0.3)', filter: 'blur(100px)', borderRadius: '50%', zIndex: 1 }}></div>
             <div style={{ position: 'absolute', top: '30%', right: '10%', width: '300px', height: '300px', background: 'rgba(0,212,170,0.2)', filter: 'blur(80px)', borderRadius: '50%', zIndex: 1 }}></div>
             
-            <div className="glow-card" style={{ position: 'relative', zIndex: 10, transform: 'rotateY(-15deg) rotateX(10deg) translateZ(50px)', width: '110%', minWidth: '600px', background: 'rgba(25,25,35,0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '24px', padding: '32px', boxShadow: '-20px 40px 100px rgba(0,0,0,0.8)', transition: 'transform 0.5s ease' }}>
+            <div className="glow-card" style={{ position: 'relative', zIndex: 10, transform: `rotateY(${tilt.y}deg) rotateX(${tilt.x}deg) translateZ(50px)`, width: '110%', minWidth: '600px', background: 'rgba(25,25,35,0.9)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '24px', padding: '32px', boxShadow: '-20px 40px 100px rgba(0,0,0,0.8)', transition: 'transform 0.15s ease-out, box-shadow 0.3s ease' }}>
                
                {/* Mock UI Header */}
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px' }}>
@@ -128,7 +179,7 @@ export default function Login() {
                    <div style={{ fontSize: '0.95rem', color: '#00D4AA', marginTop: '4px' }}>Active Cycle: FY2025-26</div>
                  </div>
                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                   <div style={{ background: 'rgba(255,71,87,0.2)', color: '#FF4757', padding: '6px 16px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 'bold' }}>2 Action Items</div>
+                   <div style={{ background: 'rgba(255,71,87,0.2)', color: '#FF4757', padding: '6px 16px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 'bold', animation: 'pulse-danger 2s infinite' }}>2 Action Items</div>
                    <div style={{ width: '48px', height: '48px', background: 'var(--gradient-accent)', borderRadius: '50%', boxShadow: '0 0 20px rgba(91,95,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', fontSize: '1.1rem' }}>SA</div>
                  </div>
                </div>
@@ -138,23 +189,23 @@ export default function Login() {
                  <div style={{ background: 'linear-gradient(135deg, rgba(91,95,255,0.15) 0%, rgba(91,95,255,0.05) 100%)', borderRadius: '16px', padding: '24px', border: '1px solid rgba(91,95,255,0.3)' }}>
                    <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>Q1 Goal Progress</div>
                    <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff', marginBottom: '16px' }}>78%</div>
-                   <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>
-                     <div style={{ width: '78%', height: '100%', background: '#5B5FFF', borderRadius: '4px', boxShadow: '0 0 15px #5B5FFF' }}></div>
+                   <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                     <div className="progress-fill" style={{ width: '78%', height: '100%', background: '#5B5FFF', borderRadius: '4px', boxShadow: '0 0 15px #5B5FFF', '--target-width': '78%' }}></div>
                    </div>
                  </div>
 
                  <div style={{ background: 'linear-gradient(135deg, rgba(0,212,170,0.15) 0%, rgba(0,212,170,0.05) 100%)', borderRadius: '16px', padding: '24px', border: '1px solid rgba(0,212,170,0.3)' }}>
                    <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>Team Check-ins</div>
-                   <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#00D4AA', marginBottom: '16px' }}>12/15</div>
+                   <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#00D4AA', marginBottom: '16px', textShadow: '0 0 10px rgba(0,212,170,0.3)' }}>12/15</div>
                    <div style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.6)' }}>3 pending manager review</div>
                  </div>
                </div>
 
                {/* Mock UI Alert Row */}
-               <div style={{ background: 'linear-gradient(135deg, rgba(255,165,2,0.15) 0%, rgba(255,165,2,0.05) 100%)', borderRadius: '16px', padding: '20px 24px', border: '1px solid rgba(255,165,2,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <div style={{ background: 'linear-gradient(135deg, rgba(255,165,2,0.15) 0%, rgba(255,165,2,0.05) 100%)', borderRadius: '16px', padding: '20px 24px', border: '1px solid rgba(255,165,2,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 20px rgba(255,165,2,0.05)' }} className="hover-lift">
                  <div>
                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                     <ShieldAlert size={24} color="#FFA502"/>
+                     <ShieldAlert size={24} color="#FFA502" style={{ animation: 'shake 3s infinite' }}/>
                      <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFA502' }}>1 Escalation Alert</span>
                    </div>
                    <div style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.6)', paddingLeft: '36px' }}>L1: Goal not submitted by J. Doe</div>
@@ -168,14 +219,14 @@ export default function Login() {
 
         {/* FEATURES SECTION */}
         <section style={{ maxWidth: '1200px', margin: '100px auto 0', padding: '0 24px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '64px' }} className="scroll-reveal">
             <h2 style={{ fontSize: '2.5rem', marginBottom: '16px' }}>Powerful Features Built for Modern Teams</h2>
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>Everything you need to orchestrate a high-performance organization.</p>
           </div>
 
           <div className="grid grid-3 gap-lg">
             {/* Feature 1 */}
-            <div className="card hover-lift" style={{ padding: '32px', background: 'rgba(30,30,45,0.6)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+            <div className="card hover-lift scroll-reveal" style={{ padding: '32px', background: 'rgba(30,30,45,0.6)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(91,95,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)', marginBottom: '24px', border: '1px solid rgba(91,95,255,0.3)' }}>
                 <Target size={28}/>
               </div>
@@ -184,7 +235,7 @@ export default function Login() {
             </div>
 
             {/* Feature 2 */}
-            <div className="card hover-lift" style={{ padding: '32px', background: 'rgba(30,30,45,0.6)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+            <div className="card hover-lift scroll-reveal delay-100" style={{ padding: '32px', background: 'rgba(30,30,45,0.6)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(0,212,170,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-secondary)', marginBottom: '24px', border: '1px solid rgba(0,212,170,0.3)' }}>
                 <BarChart3 size={28}/>
               </div>
@@ -193,7 +244,7 @@ export default function Login() {
             </div>
 
             {/* Feature 3 */}
-            <div className="card hover-lift" style={{ padding: '32px', background: 'rgba(30,30,45,0.6)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+            <div className="card hover-lift scroll-reveal delay-200" style={{ padding: '32px', background: 'rgba(30,30,45,0.6)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(255,71,87,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-danger)', marginBottom: '24px', border: '1px solid rgba(255,71,87,0.3)' }}>
                 <ShieldAlert size={28}/>
               </div>

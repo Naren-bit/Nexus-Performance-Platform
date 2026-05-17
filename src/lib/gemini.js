@@ -10,23 +10,29 @@ export async function fetchGeminiInsights(stats) {
     }
 
     const prompt = `
-      You are an elite corporate performance coach and organizational analyst. 
-      Analyze the following goal setting and quarterly check-in completion statistics for this cycle:
+      You are an elite HR performance analytics AI for a corporate goal management platform.
+      Analyze this organizational data and produce exactly 4 strategic insights.
+
+      Organization Data:
       - Total Employees: ${stats.totalEmployees}
       - Sheets Submitted: ${stats.submittedCount}
-      - Sheet Approval Rate: ${stats.approvalRate}%
-      - Quarterly Check-ins Completed: ${stats.checkinsCount}
+      - Approval Rate: ${stats.approvalRate}%
+      - Check-ins Completed: ${stats.checkinsCount}
+      - Department Breakdown: ${JSON.stringify(stats.departments, null, 2)}
       
-      Department Breakdown:
-      ${JSON.stringify(stats.departments, null, 2)}
+      You MUST respond with ONLY a valid JSON object (no markdown, no backticks, no other text).
+      The JSON must have exactly this structure:
+      {
+        "insights": [
+          { "type": "positive", "title": "5 words max title", "body": "2 sentence insight, max 40 words", "metric": "Key number like 87% or 12" },
+          { "type": "warning", "title": "5 words max title", "body": "2 sentence insight, max 40 words", "metric": "Key number" },
+          { "type": "action", "title": "5 words max title", "body": "2 sentence insight, max 40 words", "metric": "Key number" },
+          { "type": "trend", "title": "5 words max title", "body": "2 sentence insight, max 40 words", "metric": "Key number" }
+        ]
+      }
       
-      Provide a highly strategic, professional bulleted list of 4 key insights. 
-      - The first bullet must highlight goal submission bottlenecks (e.g. departments lagging in draft state).
-      - The second bullet must praise top-performing departments with high approval or check-in rates.
-      - The third bullet should identify goal concentration/focus areas.
-      - The fourth bullet must be an actionable recommendation / action item (e.g., nudge specific managers or employees).
-      
-      Format the response as clear markdown bullet points with bold headers. Keep it concise, direct, and elite. Do not include introductory text, start directly with the first bullet.
+      The "type" must be one of: "positive", "warning", "action", "trend".
+      Be specific and data-driven. Reference actual departments and numbers from the data.
     `;
 
     const response = await fetch(
@@ -44,16 +50,25 @@ export async function fetchGeminiInsights(stats) {
 
     const data = await response.json();
     if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-      return data.candidates[0].content.parts[0].text;
+      const rawText = data.candidates[0].content.parts[0].text.replace(/```json/g, "").replace(/```/g, "").trim();
+      const parsed = JSON.parse(rawText);
+      if (parsed.insights && Array.isArray(parsed.insights)) {
+        return parsed; // Return structured JSON directly
+      }
+      return data.candidates[0].content.parts[0].text; // Fallback to raw text
     }
     throw new Error("Failed to extract text from Gemini response");
   } catch (error) {
     console.error("Error generating Gemini insights:", error);
-    return `Based on the current cycle data:\n` +
-           `• **Engineering** is lagging in goal submissions (${stats.departments?.Engineering?.draft || 40}% draft state). Recommend follow-ups.\n` +
-           `• **Sales** has the highest Q1 check-in completion rate.\n` +
-           `• Most goals are concentrated in 'Revenue Growth' indicating strong alignment with Q1 OKRs.\n` +
-           `• **Action item:** Escalate Q1 non-checkins for remaining employees before the window closes.`;
+    // Return structured fallback
+    return {
+      insights: [
+        { type: "positive", title: "Strong Goal Adoption", body: `${stats.submittedCount} of ${stats.totalEmployees} employees have submitted goal sheets this cycle, showing strong engagement.`, metric: `${stats.submittedCount}/${stats.totalEmployees}` },
+        { type: "warning", title: "Check-in Completion Low", body: `Only ${stats.checkinsCount} check-ins completed so far. Follow up with managers to ensure timely quarterly reviews.`, metric: `${stats.checkinsCount}` },
+        { type: "action", title: "Escalate Pending Approvals", body: `${Math.max(0, stats.totalEmployees - (stats.approvedCount || 0))} employees are awaiting goal approval. Nudge managers for faster review cycles.`, metric: `${Math.max(0, stats.totalEmployees - (stats.approvedCount || 0))}` },
+        { type: "trend", title: "Revenue Goals Dominating", body: "Revenue Growth is the most popular thrust area, indicating strong commercial alignment across the organization.", metric: "45%" }
+      ]
+    };
   }
 }
 

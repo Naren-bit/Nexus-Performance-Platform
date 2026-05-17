@@ -5,7 +5,7 @@ import { getOrgStats, getAuditLogs, createCycle, unlockGoalSheet, fastForwardCyc
 import { runEscalationCheck, saveEscalations, ESCALATION_RULES } from '../lib/escalation';
 import { exportAchievementReport, exportAuditLog } from '../lib/export';
 import { formatDateTime } from '../lib/utils';
-import { Download, Plus, AlertTriangle, ShieldAlert, Unlock, RefreshCw, Calendar, Zap } from 'lucide-react';
+import { Download, Plus, AlertTriangle, ShieldAlert, Unlock, RefreshCw, Calendar, Zap, Target, BarChart3, Settings, FileText, ClipboardList, CheckCircle2 } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, cycle } = useAuth();
@@ -19,6 +19,18 @@ export default function AdminDashboard() {
   // Modals
   const [showCycleModal, setShowCycleModal] = useState(false);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
+  
+  // Escape key to close modals
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setShowCycleModal(false);
+        setShowUnlockModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
   
   // Forms
   const [cycleForm, setCycleForm] = useState({
@@ -116,7 +128,15 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) return <div className="empty-state"><div className="spinner"></div></div>;
+  if (loading) return (
+    <div className="animate-fade-in" style={{ paddingBottom: '40px' }}>
+      <div className="page-header"><div><h1>Admin Dashboard</h1><p>Loading organization data...</p></div></div>
+      <div className="grid grid-4 gap-md" style={{ marginBottom: '24px' }}>
+        {[1,2,3,4].map(i => <div key={i} className="card card-stat"><div className="skeleton" style={{ height: '60px' }}></div></div>)}
+      </div>
+      <div className="grid grid-2 gap-lg"><div className="card"><div className="skeleton" style={{ height: '200px' }}></div></div><div className="card"><div className="skeleton" style={{ height: '200px' }}></div></div></div>
+    </div>
+  );
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '40px' }}>
@@ -163,11 +183,11 @@ export default function AdminDashboard() {
         
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button className="btn btn-secondary btn-sm" onClick={() => handleFastForward('goal_setting')} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(91,95,255,0.15)', borderColor: 'rgba(91,95,255,0.3)', color: '#fff', cursor: 'pointer' }}>
-            🎯 Goal Setting
+            <Target size={14} /> Goal Setting
           </button>
           {['Q1', 'Q2', 'Q3', 'Q4'].map(q => (
             <button key={q} className="btn btn-secondary btn-sm" onClick={() => handleFastForward(q)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,212,170,0.15)', borderColor: 'rgba(0,212,170,0.3)', color: '#fff', cursor: 'pointer' }}>
-              📝 {q} Check-in
+              <Calendar size={14} /> {q} Check-in
             </button>
           ))}
         </div>
@@ -196,7 +216,7 @@ export default function AdminDashboard() {
         {/* Heatmap */}
         <div className="card">
           <div className="card-header">
-            <h4>📊 Org Completion Heatmap</h4>
+            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart3 size={18} color="#5B5FFF"/> Org Completion Heatmap</h4>
           </div>
           {stats?.departments ? (
             <div style={{ display: 'grid', gap: '2px', gridTemplateColumns: '120px repeat(5, 1fr)' }}>
@@ -239,7 +259,7 @@ export default function AdminDashboard() {
         {/* Cycle Management */}
         <div className="card">
           <div className="card-header">
-            <h4>⚙️ Cycle Management</h4>
+            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Settings size={18} color="#9B59FF"/> Cycle Management</h4>
             <button className="btn btn-primary btn-sm" onClick={() => setShowCycleModal(true)}>
               <Plus size={14}/> New Cycle
             </button>
@@ -277,7 +297,7 @@ export default function AdminDashboard() {
             {escalations.filter(e => !e.resolved).length === 0 ? (
               <div className="empty-state" style={{ padding: '20px' }}>
                 <ShieldAlert size={32} style={{ color: 'var(--accent-secondary)', opacity: 0.5, marginBottom: '12px' }}/>
-                <p>No active escalations. ✅</p>
+                <p>All clear — no active escalations</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -333,7 +353,7 @@ export default function AdminDashboard() {
       {/* Audit Log */}
       <div className="card">
         <div className="card-header">
-          <h4>📋 Audit Trail</h4>
+            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ClipboardList size={18} color="#00D4AA"/> Audit Trail</h4>
         </div>
         <div className="table-container" style={{ border: 'none' }}>
           <table className="data-table">

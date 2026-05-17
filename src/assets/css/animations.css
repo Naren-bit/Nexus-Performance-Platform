@@ -250,6 +250,25 @@
   animation: gradient-shift 10s ease infinite alternate;
 }
 
+/* ---------- Scroll Reveal Animations ---------- */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(35px);
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.reveal-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger Delay Utilities */
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+
 /* ---------- Reduced Motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

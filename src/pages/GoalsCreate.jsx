@@ -4,7 +4,7 @@ import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
 import { getGoalSheet, saveGoalSheet, submitGoalSheet } from '../lib/goals';
 import { validateGoalSheet, generateId, THRUST_AREAS, UOM_TYPES, VALIDATION_RULES } from '../lib/utils';
-import { Save, Send, Plus, Trash2, ArrowLeft, BrainCircuit } from 'lucide-react';
+import { Save, Send, Plus, Trash2, ArrowLeft, BrainCircuit, Copy } from 'lucide-react';
 import { sendEmailNotification } from '../lib/notifications';
 import { doc, getDoc } from '../lib/firebase-config';
 import { db } from '../lib/firebase-config';
@@ -20,6 +20,30 @@ export default function GoalsCreate() {
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [aiReasonings, setAiReasonings] = useState({});
+  
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+S / Cmd+S -> Save Draft
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSaveDraft();
+      }
+      // Ctrl+Enter / Cmd+Enter -> Submit
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit();
+      }
+      // Ctrl+N / Cmd+N -> New Goal
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        addGoal();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goals, sheet]); // Depend on goals/sheet to get latest state in handlers
   
   useEffect(() => {
     async function fetchSheet() {
@@ -49,7 +73,7 @@ export default function GoalsCreate() {
       return;
     }
     
-    showToast('✨ Gemini is drafting a custom goal...', 'info');
+    showToast('Gemini is drafting a custom goal...', 'info');
     
     let sug = null;
     try {
@@ -157,6 +181,25 @@ export default function GoalsCreate() {
     setGoals(prev => prev.filter((_, i) => i !== index));
   };
 
+  const duplicateGoal = (index) => {
+    if (goals.length >= VALIDATION_RULES.maxGoals) {
+      showToast(`Maximum ${VALIDATION_RULES.maxGoals} goals allowed.`, 'warn');
+      return;
+    }
+    const goalToCopy = goals[index];
+    setGoals(prev => {
+      const newGoals = [...prev];
+      newGoals.splice(index + 1, 0, {
+        ...goalToCopy,
+        goalId: generateId(),
+        title: goalToCopy.title ? `${goalToCopy.title} (Copy)` : '',
+        isShared: false // Duplicate removes shared lock
+      });
+      return newGoals;
+    });
+    showToast('Goal duplicated.', 'info');
+  };
+
   const updateGoal = (index, field, value) => {
     setGoals(prev => {
       const newGoals = [...prev];
@@ -243,15 +286,30 @@ export default function GoalsCreate() {
   const validationErrors = validateGoalSheet(goals);
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '80px' }}>
+    <div className="animate-fade-in" style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '80px' }}>
       <div className="page-header">
         <div>
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/dashboard-employee')} style={{ marginBottom: '8px', padding: 0 }}>
+            <ArrowLeft size={16} style={{ display: 'inline', marginRight: '4px' }}/> Back to Dashboard
+          </button>
           <h1>Goal Setting</h1>
           <p>Define your goals for {cycle?.name}</p>
         </div>
-        <button className="btn btn-secondary btn-sm" onClick={() => navigate('/dashboard-employee')}>
-          <ArrowLeft size={16}/> Back
-        </button>
+        <div style={{ display: 'flex', gap: '8px', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-secondary" onClick={handleSaveDraft} disabled={saving || submitting}>
+              {saving ? <div className="spinner" style={{width:16,height:16}}/> : <Save size={16}/>} Save Draft
+            </button>
+            <button className="btn btn-primary" onClick={handleSubmit} disabled={saving || submitting || remaining !== 0 || validationErrors.length > 0}>
+              {submitting ? <div className="spinner" style={{width:16,height:16,borderColor:'#fff',borderTopColor:'transparent'}}/> : <Send size={16}/>} Submit Goals
+            </button>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '12px' }}>
+            <span><kbd>⌘S</kbd> Save</span>
+            <span><kbd>⌘↵</kbd> Submit</span>
+            <span><kbd>⌘N</kbd> New Goal</span>
+          </div>
+        </div>
       </div>
 
       {/* Validation Panel */}
@@ -305,13 +363,24 @@ export default function GoalsCreate() {
             </h4>
 
             {goals.length > 1 && !g.isShared && (
-              <button 
-                onClick={() => removeGoal(idx)}
-                className="btn btn-ghost btn-sm" 
-                style={{ position: 'absolute', top: '16px', right: '120px', color: 'var(--accent-danger)' }}
-              >
-                <Trash2 size={16} /> Remove
-              </button>
+              <div style={{ position: 'absolute', top: '16px', right: '120px', display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => duplicateGoal(idx)}
+                  className="btn btn-ghost btn-sm" 
+                  style={{ color: 'var(--text-secondary)' }}
+                  title="Duplicate this goal"
+                >
+                  <Copy size={16} />
+                </button>
+                <button 
+                  onClick={() => removeGoal(idx)}
+                  className="btn btn-ghost btn-sm" 
+                  style={{ color: 'var(--accent-danger)' }}
+                  title="Remove goal"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             )}
 
             <div className="grid grid-2 gap-md">
@@ -376,12 +445,13 @@ export default function GoalsCreate() {
               )}
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">Description (Optional)</label>
+                <label className="form-label">Description (Optional) <span style={{ float: 'right', color: 'var(--text-muted)' }}>{(g.description||'').length}/500</span></label>
                 <textarea 
                   className="form-textarea" 
                   value={g.description || ''} 
                   disabled={g.isShared}
                   onChange={(e) => updateGoal(idx, 'description', e.target.value)}
+                  maxLength={500}
                   placeholder="Add more details about how you will achieve this..."
                 />
               </div>

@@ -75,7 +75,8 @@ export async function fetchGeminiGoalSuggestion(thrustArea) {
         "uom": "Must be one of: 'numeric', 'percent', 'timeline', 'zero'",
         "uomDirection": "Must be 'min' (for higher is better) or 'max' (for lower is better) or empty for timeline/zero",
         "target": "A raw number representing the target, or a YYYY-MM-DD date if uom is timeline, or 0 if uom is zero",
-        "description": "A 1-2 sentence description explaining the key strategy to achieve this goal."
+        "description": "A 1-2 sentence description explaining the key strategy to achieve this goal.",
+        "reasoning": "A 2-3 sentence strategic rationale explaining why this goal fits the chosen Thrust Area, why the metric/UOM was selected, and how it represents a high-impact SMART achievement."
       }
     `;
 

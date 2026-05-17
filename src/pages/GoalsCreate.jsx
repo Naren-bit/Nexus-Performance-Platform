@@ -19,6 +19,7 @@ export default function GoalsCreate() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [aiReasonings, setAiReasonings] = useState({});
   
   useEffect(() => {
     async function fetchSheet() {
@@ -63,59 +64,67 @@ export default function GoalsCreate() {
         uom: "percent",
         uomDirection: "min",
         target: "15",
-        description: "Focus on upselling high-margin add-ons to tier-1 enterprise accounts and improving conversion rates on outbound sales campaigns by 5%."
+        description: "Focus on upselling high-margin add-ons to tier-1 enterprise accounts and improving conversion rates on outbound sales campaigns by 5%.",
+        reasoning: "Directly drives top-line revenue expansion. The percentage metric ensures scalable growth tracking, and the target is calibrated to represent an aggressive but highly attainable expansion on existing tier-1 accounts."
       },
       'Customer Success': {
         title: "Achieve a Net Promoter Score (NPS) of 85",
         uom: "numeric",
         uomDirection: "min",
         target: "85",
-        description: "Establish a post-resolution feedback loop, conduct comprehensive customer experience mapping, and reduce unresolved tickets to < 1%."
+        description: "Establish a post-resolution feedback loop, conduct comprehensive customer experience mapping, and reduce unresolved tickets to < 1%.",
+        reasoning: "Customer satisfaction is our core competitive moat. The numeric target of 85 is calibrated to represent elite industry performance, driving active feedback cycles and zero-friction ticket resolution timelines."
       },
       'Operational Excellence': {
         title: "Reduce Support Ticket Turnaround Time (TAT) to 2 hours",
         uom: "numeric",
         uomDirection: "max",
         target: "2",
-        description: "Implement automated routing policies, optimize standard operating documentation (SOPs), and organize bi-weekly triage training sessions."
+        description: "Implement automated routing policies, optimize standard operating documentation (SOPs), and organize bi-weekly triage training sessions.",
+        reasoning: "Operational efficiency is vital for scale. Setting a max limit of 2 hours turnaround for tickets drives automated routing and peer SOP triage alignments, representing a massive operational improvement."
       },
       'People & Culture': {
         title: "Organize 3 Cross-Department Knowledge Sharing Sessions",
         uom: "numeric",
         uomDirection: "min",
         target: "3",
-        description: "Facilitate engineering-to-product cross-training, document session summaries in internal wiki, and secure at least 90% positive team feedback."
+        description: "Facilitate engineering-to-product cross-training, document session summaries in internal wiki, and secure at least 90% positive team feedback.",
+        reasoning: "Fosters inter-departmental trust and transparency. A target of 3 distinct sessions ensures consistent cross-functional knowledge sharing, driving positive employee net promoter scores."
       },
       'Innovation': {
         title: "Deploy 2 Core AI Features into Production",
         uom: "numeric",
         uomDirection: "min",
         target: "2",
-        description: "Successfully design, test, and release the AI-assisted goal drafting tool and automated organizational summary metrics."
+        description: "Successfully design, test, and release the AI-assisted goal drafting tool and automated organizational summary metrics.",
+        reasoning: "Aligns with our commitment to state-of-the-art tech. Targeting 2 main production AI features establishes clear technological innovation boundaries and high-value customer feature sets."
       },
       'Compliance & Risk': {
         title: "Achieve Zero Safety/Security Compliance Violations",
         uom: "zero",
         uomDirection: "",
         target: "0",
-        description: "Conduct monthly security hygiene audits, mandate compliance training completion for 100% of the engineering staff, and resolve risk alerts in < 24h."
+        description: "Conduct monthly security hygiene audits, mandate compliance training completion for 100% of the engineering staff, and resolve risk alerts in < 24h.",
+        reasoning: "Mitigates critical operational and financial exposure. A target of zero violations represents a strict security compliance policy that protects enterprise data integrity."
       },
       'Cost Reduction': {
         title: "Reduce AWS Cloud Hosting Cost by 12%",
         uom: "percent",
         uomDirection: "min",
         target: "12",
-        description: "Decommission unused development environments, implement auto-scaling policies, and migrate storage archives to cold Glacier tiers."
+        description: "Decommission unused development environments, implement auto-scaling policies, and migrate storage archives to cold Glacier tiers.",
+        reasoning: "Directly improves profitability margins. A 12% savings target is achievable through cloud clean-ups, auto-scaling, and migration to cheaper storage tiers, preserving compute power."
       },
       'Quality': {
         title: "Reduce Production Deployment Bug Incident Rate below 1%",
         uom: "percent",
         uomDirection: "max",
         target: "1",
-        description: "Enforce a strict 80% test-coverage pre-merge threshold, implement automated smoke-testing pipelines, and organize peer design reviews."
+        description: "Enforce a strict 80% test-coverage pre-merge threshold, implement automated smoke-testing pipelines, and organize peer design reviews.",
+        reasoning: "Guarantees a premium customer user experience. Enforcing a strict 1% maximum bug rate drives standard test coverage rules and automation, proving high engineering discipline."
       }
     };
-
+ 
     const finalSug = sug || suggestions[ta] || suggestions['Revenue Growth'];
     
     updateGoal(index, 'title', finalSug.title);
@@ -123,6 +132,11 @@ export default function GoalsCreate() {
     if (finalSug.uomDirection !== undefined) updateGoal(index, 'uomDirection', finalSug.uomDirection);
     updateGoal(index, 'target', finalSug.target);
     updateGoal(index, 'description', finalSug.description);
+    
+    setAiReasonings(prev => ({
+      ...prev,
+      [index]: finalSug.reasoning || "Drafted dynamically by Gemini 2.5 Flash to ensure strategic alignment with the selected Thrust Area. This goal meets all SMART criteria: Specific title, Measurable unit of measure, Actionable strategy, Relevant to corporate outcomes, and Time-bound in cycle milestones."
+    }));
     
     showToast('✨ Gemini Copilot: Drafted a perfect SMART goal!', 'success');
   };
@@ -385,6 +399,26 @@ export default function GoalsCreate() {
                 />
               </div>
             </div>
+
+            {/* AI Suggestion Reasoning Box */}
+            {aiReasonings[idx] && (
+              <div className="animate-slide-up" style={{ 
+                marginTop: '24px', 
+                padding: '20px 24px', 
+                background: 'linear-gradient(135deg, rgba(0, 212, 170, 0.08) 0%, rgba(91, 95, 255, 0.06) 100%)', 
+                border: '1px solid rgba(0, 212, 170, 0.35)', 
+                borderRadius: '16px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+                backdropFilter: 'blur(12px)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', color: '#00D4AA', fontWeight: 'bold', fontSize: '0.92rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <BrainCircuit size={16}/> <span>✨ AI Strategy & SMART Reasoning</span>
+                </div>
+                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, margin: 0 }}>
+                  {aiReasonings[idx]}
+                </p>
+              </div>
+            )}
           </div>
         ))}
       </div>

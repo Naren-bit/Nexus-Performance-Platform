@@ -99,11 +99,41 @@ export default function Analytics() {
 
   // ─── DATA PREP ───
   // QoQ Trend
+  const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+  const orgTrend = quarters.map(q => {
+    const scores = [];
+    stats.sheets.forEach(s => {
+      const sheetScores = s.goals?.map(g => g.computedScores?.[q]).filter(v => v != null) || [];
+      if (sheetScores.length > 0) scores.push(sheetScores.reduce((a,b) => a+b, 0) / sheetScores.length);
+    });
+    if (scores.length === 0) return null;
+    return Math.round((scores.reduce((a,b) => a+b, 0) / scores.length) * 100);
+  });
+
+  const topTrend = quarters.map(q => {
+    const scores = [];
+    stats.sheets.forEach(s => {
+      const sheetScores = s.goals?.map(g => g.computedScores?.[q]).filter(v => v != null) || [];
+      if (sheetScores.length > 0) scores.push(sheetScores.reduce((a,b) => a+b, 0) / sheetScores.length);
+    });
+    if (scores.length === 0) return null;
+    scores.sort((a,b) => b-a);
+    const topCount = Math.max(1, Math.ceil(scores.length * 0.25));
+    const topScores = scores.slice(0, topCount);
+    return Math.round((topScores.reduce((a,b) => a+b, 0) / topScores.length) * 100);
+  });
+
+  // Ensure chart isn't completely void if no check-ins exist yet
+  if (orgTrend.every(v => v === null)) {
+    orgTrend[0] = 0;
+    topTrend[0] = 0;
+  }
+
   const lineData = {
-    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+    labels: quarters,
     datasets: [
-      { label: 'Org Average Progress', data: [72, 81, null, null], borderColor: '#5B5FFF', backgroundColor: 'rgba(91,95,255,0.08)', tension: 0.4, fill: true, pointBackgroundColor: '#5B5FFF', pointRadius: 6, pointHoverRadius: 8 },
-      { label: 'Top Performers Avg', data: [85, 92, null, null], borderColor: '#00D4AA', backgroundColor: 'rgba(0,212,170,0.05)', tension: 0.4, fill: true, pointBackgroundColor: '#00D4AA', pointRadius: 6, pointHoverRadius: 8 }
+      { label: 'Org Average Progress', data: orgTrend, borderColor: '#5B5FFF', backgroundColor: 'rgba(91,95,255,0.08)', tension: 0.4, fill: true, pointBackgroundColor: '#5B5FFF', pointRadius: 6, pointHoverRadius: 8 },
+      { label: 'Top Performers Avg', data: topTrend, borderColor: '#00D4AA', backgroundColor: 'rgba(0,212,170,0.05)', tension: 0.4, fill: true, pointBackgroundColor: '#00D4AA', pointRadius: 6, pointHoverRadius: 8 }
     ]
   };
   const lineOptions = {
@@ -130,8 +160,8 @@ export default function Analytics() {
   const thrustCounts = {};
   stats.sheets.forEach(s => { s.goals?.forEach(g => { if (g.thrustArea) thrustCounts[g.thrustArea] = (thrustCounts[g.thrustArea] || 0) + 1; }); });
   const thrustDonutData = {
-    labels: Object.keys(thrustCounts),
-    datasets: [{ data: Object.values(thrustCounts), backgroundColor: ['#5B5FFF', '#00D4AA', '#FF4757', '#FFA502', '#9B59FF', '#3498db', '#e84393', '#fdcb6e'], borderWidth: 0, hoverOffset: 6 }]
+    labels: Object.keys(thrustCounts).length > 0 ? Object.keys(thrustCounts) : ['No Goals Yet'],
+    datasets: [{ data: Object.keys(thrustCounts).length > 0 ? Object.values(thrustCounts) : [1], backgroundColor: Object.keys(thrustCounts).length > 0 ? ['#5B5FFF', '#00D4AA', '#FF4757', '#FFA502', '#9B59FF', '#3498db'] : ['#2A2A3A'], borderWidth: 0, hoverOffset: 6 }]
   };
   const donutOptions = { plugins: { legend: { position: 'right', labels: { color: '#8888AA', boxWidth: 12, padding: 12 } } }, cutout: '72%', responsive: true, maintainAspectRatio: false };
 
@@ -142,11 +172,15 @@ export default function Analytics() {
   allManagers.forEach(m => { managerData[m.uid] = { name: m.name, teamSize: 0, completedCheckins: 0 }; });
   allEmployees.forEach(e => { if (e.managerId && managerData[e.managerId]) managerData[e.managerId].teamSize += 1; });
   stats.checkins.forEach(c => { if (c.quarter === 'Q1') { const emp = allEmployees.find(e => e.uid === c.employeeId); if (emp?.managerId && managerData[emp.managerId]) managerData[emp.managerId].completedCheckins += 1; } });
+  
   const managersWithTeams = Object.values(managerData).filter(m => m.teamSize > 0);
+  const barLabels = managersWithTeams.length ? managersWithTeams.map(m => m.name) : ['No Teams Assigned'];
+  const barValues = managersWithTeams.length ? managersWithTeams.map(m => Math.round((m.completedCheckins / m.teamSize) * 100)) : [0];
+  const barColors = managersWithTeams.length ? managersWithTeams.map(m => { const r = (m.completedCheckins / m.teamSize) * 100; return r >= 80 ? 'rgba(0,212,170,0.8)' : r >= 50 ? 'rgba(255,165,2,0.8)' : 'rgba(255,71,87,0.8)'; }) : ['#2A2A3A'];
 
   const barData = {
-    labels: managersWithTeams.length ? managersWithTeams.map(m => m.name) : ['Manager A', 'Manager B', 'Manager C'],
-    datasets: [{ label: 'Q1 Check-in Completion (%)', data: managersWithTeams.length ? managersWithTeams.map(m => Math.round((m.completedCheckins / m.teamSize) * 100)) : [85, 40, 95], backgroundColor: managersWithTeams.length ? managersWithTeams.map(m => { const r = (m.completedCheckins / m.teamSize) * 100; return r >= 80 ? 'rgba(0,212,170,0.8)' : r >= 50 ? 'rgba(255,165,2,0.8)' : 'rgba(255,71,87,0.8)'; }) : ['rgba(0,212,170,0.8)', 'rgba(255,71,87,0.8)', 'rgba(0,212,170,0.8)'], borderRadius: 6 }]
+    labels: barLabels,
+    datasets: [{ label: 'Q1 Check-in Completion (%)', data: barValues, backgroundColor: barColors, borderRadius: 6 }]
   };
   const barOptions = {
     responsive: true, maintainAspectRatio: false, indexAxis: 'y',

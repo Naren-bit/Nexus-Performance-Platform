@@ -46,11 +46,12 @@ graph TD
         NotificationEngine[Notification & Escalation Engine]
         EmailJS[EmailJS API]
         MSTeams[Microsoft Teams Webhook]
-        ClaudeAI[Claude AI Insights API]
+        GeminiAI[Google Gemini 2.5 Flash API]
         
         NotificationEngine --> |"SMTP Payload"| EmailJS
         NotificationEngine --> |"Adaptive Cards"| MSTeams
-        UI_Admin <--> |"Fetch Insights"| ClaudeAI
+        UI_Admin <--> |"Fetch Insights"| GeminiAI
+        UI_Emp <--> |"Suggest Goals"| GeminiAI
     end
 
     %% Styling
@@ -61,7 +62,7 @@ graph TD
 
     class UI_Login,UI_Emp,UI_Mgr,UI_Admin primary;
     class Auth_Layer,Entra_ID secondary;
-    class EmailJS,MSTeams,ClaudeAI external;
+    class EmailJS,MSTeams,GeminiAI external;
     class Firestore db;
 ```
 

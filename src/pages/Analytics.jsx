@@ -8,6 +8,7 @@ import {
 } from 'chart.js';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
 import { BrainCircuit, TrendingUp, BarChart3, PieChart, Users } from 'lucide-react';
+import { fetchGeminiInsights } from '../lib/gemini';
 
 ChartJS.register(
   CategoryScale, LinearScale, PointElement, LineElement, 
@@ -38,19 +39,15 @@ export default function Analytics() {
     loadData();
   }, [user, cycle]);
 
-  const generateAIInsight = () => {
+  const generateAIInsight = async () => {
     setLoadingInsight(true);
-    // Simulating API call to Claude
-    setTimeout(() => {
-      setAiInsight(
-        "Based on the current cycle data:\n" +
-        "• **Engineering** is lagging in goal submissions (40% draft state). Recommend follow-ups.\n" +
-        "• **Sales** has the highest Q1 check-in completion rate (92%).\n" +
-        "• Most goals are concentrated in 'Revenue Growth' indicating strong alignment with Q1 OKRs.\n" +
-        "• **Action item:** Escalate Q1 non-checkins for 12 employees before the window closes."
-      );
-      setLoadingInsight(false);
-    }, 1500);
+    try {
+      const insights = await fetchGeminiInsights(stats);
+      setAiInsight(insights);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingInsight(false);
   };
 
   if (loading) return <div className="empty-state"><div className="spinner"></div></div>;
@@ -184,7 +181,7 @@ export default function Analytics() {
       {aiInsight && (
         <div className="card animate-slide-down" style={{ marginBottom: '24px', border: '1px solid #FF9A9E', background: 'linear-gradient(135deg, rgba(255,154,158,0.1) 0%, rgba(254,207,239,0.05) 100%)' }}>
           <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#FF9A9E' }}>
-            <BrainCircuit size={18}/> Claude API Insights
+            <BrainCircuit size={18}/> Gemini AI Insights
           </h4>
           <div style={{ whiteSpace: 'pre-line', color: 'var(--text-primary)', lineHeight: 1.6 }}>
             {aiInsight}

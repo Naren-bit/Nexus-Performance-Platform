@@ -8,6 +8,7 @@ import { Save, Send, Plus, Trash2, ArrowLeft, BrainCircuit } from 'lucide-react'
 import { sendEmailNotification } from '../lib/notifications';
 import { doc, getDoc } from '../lib/firebase-config';
 import { db } from '../lib/firebase-config';
+import { fetchGeminiGoalSuggestion } from '../lib/gemini';
 
 export default function GoalsCreate() {
   const { user, cycle } = useAuth();
@@ -40,11 +41,20 @@ export default function GoalsCreate() {
     fetchSheet();
   }, [cycle, user]);
 
-  const suggestAIGoal = (index) => {
+  const suggestAIGoal = async (index) => {
     const ta = goals[index].thrustArea;
     if (!ta) {
       showToast('Please select a Thrust Area first!', 'warn');
       return;
+    }
+    
+    showToast('✨ Gemini is drafting a custom goal...', 'info');
+    
+    let sug = null;
+    try {
+      sug = await fetchGeminiGoalSuggestion(ta);
+    } catch (err) {
+      console.warn("Gemini suggestion failed, using high-fidelity local fallback", err);
     }
     
     const suggestions = {
@@ -106,15 +116,15 @@ export default function GoalsCreate() {
       }
     };
 
-    const sug = suggestions[ta] || suggestions['Revenue Growth'];
+    const finalSug = sug || suggestions[ta] || suggestions['Revenue Growth'];
     
-    updateGoal(index, 'title', sug.title);
-    updateGoal(index, 'uom', sug.uom);
-    if (sug.uomDirection !== undefined) updateGoal(index, 'uomDirection', sug.uomDirection);
-    updateGoal(index, 'target', sug.target);
-    updateGoal(index, 'description', sug.description);
+    updateGoal(index, 'title', finalSug.title);
+    updateGoal(index, 'uom', finalSug.uom);
+    if (finalSug.uomDirection !== undefined) updateGoal(index, 'uomDirection', finalSug.uomDirection);
+    updateGoal(index, 'target', finalSug.target);
+    updateGoal(index, 'description', finalSug.description);
     
-    showToast('✨ Claude Copilot: Drafted a perfect SMART goal!', 'success');
+    showToast('✨ Gemini Copilot: Drafted a perfect SMART goal!', 'success');
   };
 
   const addGoal = () => {

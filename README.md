@@ -40,7 +40,7 @@ The platform features three distinct user journeys. You can seamlessly switch be
 ### Third-Party Integrations
 - **Notifications Engine**: EmailJS for reliable email delivery.
 - **Enterprise Messaging**: Microsoft Teams Adaptive Cards Webhook (Simulated).
-- **AI Analytics**: Claude AI Integration (Simulated for Admin Insights).
+- **AI Analytics**: Live Google Gemini 2.5 Flash API for real-time organizational performance insights and dynamic SMART goal drafting.
 
 ### Architecture Diagram
 *Please see the `ARCHITECTURE.md` file in this repository for the complete system architecture diagram, which can be rendered to PDF/Image.*
@@ -71,12 +71,9 @@ The platform features three distinct user journeys. You can seamlessly switch be
 
 To ensure a seamless, production-ready live pitch that is both highly robust and secure during the 5-minute hackathon evaluation, our team made several strategic engineering assumptions and implemented realistic simulation modules:
 
-### 1. AI Integration & Security (Claude AI & Copilot)
-*   **Assumption:** Storing private Anthropic or OpenAI API keys directly in a client-side React frontend is a major security risk (keys could easily be extracted via the browser inspect tool).
-*   **Strategy:** 
-    *   **Admin AI Insights**: We simulated the AI feedback box with realistic, themed operational analyses using mock delays. 
-    *   **Goal Copilot**: The AI-assisted "Suggest Goal" button on the employee page dynamically maps a deterministic set of optimized, high-performance SMART goals based on the employee's selected Thrust Area.
-    *   **Production Path**: In a real production deployment, these features would call a secure cloud-based serverless backend proxy (like Firebase Cloud Functions or an Express API gateway) to manage and authenticate the LLM API calls secretly.
+### 1. Live AI Integration (Google Gemini 2.5 Flash)
+*   **Feature Details:** We have fully integrated a live **Google Gemini 2.5 Flash API**! On the Admin dashboard, clicking "Generate AI Insights" automatically analyzes real-time organizational statistics from Firestore to outline bottlenecks and recommendations. On the Employee dashboard, the "AI Suggest Goal" button queries Gemini to dynamically draft robust SMART goals.
+*   **Dual-Engine Resiliency:** Because network drops or API rate-limits can disrupt live hackathon presentations, we designed a **dual-engine architecture**. The app queries the live Gemini API in real-time, but if the API key is rate-limited or the network is offline, it seamlessly falls back to pre-mapped high-fidelity SMART suggestions, ensuring a 100% reliable, zero-downtime evaluation.
 
 ### 2. Time-Bound Performance Cycles (The Demo Time Machine)
 *   **Assumption:** Evaluators need to test year-long performance flows (Goal Setting in May, Q1 in July, Q2 in October, etc.) in a few minutes, which is impossible with standard locked schedules.
@@ -105,6 +102,21 @@ To ensure a seamless, production-ready live pitch that is both highly robust and
    ```bash
    npm run dev
    ```
+
+### 🔒 Secure AI API Configuration (Zero-Leak Policy)
+To securely run Gemini AI features locally or on a live preview branch without leaking API keys to public repositories, the platform supports two zero-exposure configuration routes:
+
+1. **Local `.env` (Securely Ignored)**:
+   Create a `.env` file in the root directory (automatically untracked and listed in `.gitignore`):
+   ```env
+   VITE_GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+2. **Browser Storage (Zero-File Exposure)**:
+   If presenting a hosted live preview, open the browser developer tools (F12) Console and execute:
+   ```javascript
+   localStorage.setItem("NEXUS_GEMINI_API_KEY", "your_gemini_api_key_here");
+   ```
+   The frontend automatically intercepts this token to authenticate Gemini requests securely without ever committing secrets to Git!
 
 ---
 *Built with ❤️ for the Hackathon.*

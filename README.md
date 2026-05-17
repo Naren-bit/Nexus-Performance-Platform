@@ -1,6 +1,6 @@
 # Nexus Performance Platform
 
-![Nexus Logo/Banner](public/vite.svg) *Replace with actual banner if available*
+![Nexus Logo/Banner](public/nexus_logo.png)
 
 **Nexus** is a centralized, high-performance organizational goal management platform. It streamlines the entire employee performance cycle—empowering teams to set annual OKRs aligned with company Thrust Areas, facilitating seamless manager approvals, enabling structured quarterly check-ins, and providing Admins with real-time analytics and automated escalation tracking.
 

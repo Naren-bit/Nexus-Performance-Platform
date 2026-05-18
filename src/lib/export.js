@@ -46,7 +46,17 @@ export async function exportAchievementReport(sheets, cycleId) {
     ws[addr].s = { font: { bold: true }, fill: { fgColor: { rgb: '5B5FFF' } } };
   }
 
-  XLSX.writeFile(wb, `Achievement_Report_${cycleId}_${today()}.xlsx`);
+  // Force file download with correct name using Blob and anchor tag
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([wbout], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Achievement_Report_${cycleId}_${today()}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
 export async function exportAuditLog(logs) {
@@ -68,5 +78,14 @@ export async function exportAuditLog(logs) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Audit Log');
   
-  XLSX.writeFile(wb, `Audit_Log_${today()}.xlsx`);
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([wbout], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Audit_Log_${today()}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 }

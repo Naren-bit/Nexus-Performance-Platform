@@ -60,6 +60,7 @@ The platform features three distinct user journeys. You can seamlessly switch be
 - Real-time Org Heatmaps showing goal alignment across departments.
 - QoQ (Quarter-on-Quarter) progress tracking and dynamic score computations.
 - "Manager Effectiveness" visualizations.
+- *Note for Evaluators: To maintain complete authenticity, all Analytics charts (including the line graphs) are wired to real, dynamic Firestore data rather than relying on simulated mock data. As a result, the charts may appear empty or zeroed-out upon first login. They will automatically populate as soon as you create and submit goals and check-ins during your evaluation!*
 
 ### 3. Automated Escalation Engine
 - **Level 1 (L1)**: Flags missing goal submissions to direct managers.

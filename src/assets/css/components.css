@@ -978,11 +978,30 @@
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .sidebar { display: none; }
-  .main-content { margin-left: 0; }
+  .main-content { margin-left: 0; padding: 16px; }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-header .flex {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .card { padding: 16px; }
+  .card-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+  .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table { min-width: 600px; }
 
   .modal {
     width: 95%;
     margin: 16px;
+    max-height: 85vh;
+    overflow-y: auto;
   }
 
   .toast-container {
@@ -992,6 +1011,12 @@
   }
 
   .toast { max-width: 100%; }
+
+  .btn { font-size: 0.82rem; padding: 8px 14px; }
+  .btn-sm { padding: 6px 10px; font-size: 0.75rem; }
+
+  .card-stat .stat-value { font-size: 1.5rem; }
+  .card-stat .stat-label { font-size: 0.7rem; }
 }
 
 /* ---------- Toast Notifications ---------- */

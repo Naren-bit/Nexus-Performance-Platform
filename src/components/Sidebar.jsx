@@ -42,6 +42,15 @@ export default function Sidebar() {
             </NavLink>
           </>
         )}
+
+        {user.role === 'manager' && (
+          <NavLink 
+            to="/checkin" 
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+          >
+            <span className="link-icon"><CheckSquare size={18} /></span> Check-ins
+          </NavLink>
+        )}
         
         <NavLink 
           to="/analytics" 

@@ -350,6 +350,68 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Completion Dashboard — BRD Section 4 Requirement */}
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <div className="card-header">
+          <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={18} color="#00D4AA"/> Completion Dashboard</h4>
+        </div>
+        <div className="table-container" style={{ border: 'none' }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Department</th>
+                <th>Goal Status</th>
+                <th>Q1</th>
+                <th>Q2</th>
+                <th>Q3</th>
+                <th>Q4</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats?.users?.filter(u => u.role === 'employee').length === 0 ? (
+                <tr><td colSpan="7" className="text-center text-muted">No employees found.</td></tr>
+              ) : (
+                stats?.users?.filter(u => u.role === 'employee').map(emp => {
+                  const empSheet = stats.sheets.find(s => s.employeeId === emp.uid);
+                  const sheetStatus = empSheet?.status || 'not_started';
+                  const statusBadge = {
+                    approved: { bg: 'rgba(0,212,170,0.15)', color: '#00D4AA' },
+                    submitted: { bg: 'rgba(91,95,255,0.15)', color: '#5B5FFF' },
+                    draft: { bg: 'rgba(255,165,2,0.15)', color: '#FFA502' },
+                    returned: { bg: 'rgba(255,71,87,0.15)', color: '#FF4757' },
+                    not_started: { bg: 'rgba(74,74,106,0.15)', color: '#4A4A6A' }
+                  }[sheetStatus] || { bg: 'transparent', color: 'var(--text-muted)' };
+                  
+                  return (
+                    <tr key={emp.uid}>
+                      <td style={{ fontWeight: 600 }}>{emp.name}</td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{emp.department}</td>
+                      <td>
+                        <span className="badge" style={{ background: statusBadge.bg, color: statusBadge.color, fontSize: '0.75rem' }}>
+                          {sheetStatus.replace('_', ' ')}
+                        </span>
+                      </td>
+                      {['Q1','Q2','Q3','Q4'].map(q => {
+                        const done = stats.checkins.some(c => c.employeeId === emp.uid && c.quarter === q);
+                        return (
+                          <td key={q} style={{ textAlign: 'center' }}>
+                            {done 
+                              ? <CheckCircle2 size={16} color="#00D4AA" /> 
+                              : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>—</span>
+                            }
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Audit Log */}
       <div className="card">
         <div className="card-header">

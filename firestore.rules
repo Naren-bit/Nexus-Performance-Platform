@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper Functions ──
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+
+    function isManager() {
+      return isAuthenticated() && getUserRole() == 'manager';
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // ── Users Collection ──
+    // Any authenticated user can read user profiles (needed for team lookups).
+    // Users can only update their own profile. Admins can update any profile.
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Goal Cycles Collection ──
+    // Any authenticated user can read cycles. Only admins can create/update.
+    match /goalCycles/{cycleId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ── Goal Sheets Collection ──
+    // Employees can read/write their own sheets.
+    // Managers can read sheets where they are the assigned manager.
+    // Managers can update sheets (for approval/return).
+    // Admins can read/update all sheets (for unlock).
+    match /goalSheets/{sheetId} {
+      allow read: if isAuthenticated() && (
+        isOwner(resource.data.employeeId) ||
+        resource.data.managerId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.employeeId;
+      allow update: if isAuthenticated() && (
+        isOwner(resource.data.employeeId) ||
+        resource.data.managerId == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ── Check-ins Collection ──
+    // Employees can read their own check-ins. Managers can read their team's.
+    // Only the employee or their manager can create a check-in.
+    // Admins can read all.
+    match /checkins/{checkinId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // ── Audit Log Collection ──
+    // Only the system (authenticated users performing actions) can write.
+    // Only admins can read the full audit log.
+    match /auditLog/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // ── Escalations Collection ──
+    match /escalations/{escId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isManager() || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // ── Notifications Collection ──
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+  }
+}

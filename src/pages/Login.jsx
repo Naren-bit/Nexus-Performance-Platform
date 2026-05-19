@@ -323,10 +323,14 @@ export default function Login() {
 
             <div style={{ marginTop: '32px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
               <p style={{ fontSize: '0.75rem', textAlign: 'center', marginBottom: '16px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Quick Demo Access</p>
-              <div className="grid grid-3 gap-sm">
-                <button className="btn btn-secondary btn-sm" onClick={() => useDemo('employee@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><Users size={14} style={{ marginRight:'4px' }}/> Employee</button>
-                <button className="btn btn-secondary btn-sm" onClick={() => useDemo('manager@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><CheckCircle2 size={14} style={{ marginRight:'4px' }}/> Manager</button>
-                <button className="btn btn-secondary btn-sm" onClick={() => useDemo('admin@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><ShieldAlert size={14} style={{ marginRight:'4px' }}/> Admin</button>
+              <div className="grid grid-3 gap-sm" style={{ marginBottom: '8px' }}>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => useDemo('employee@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><Users size={14} style={{ marginRight:'4px' }}/> Employee 1</button>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => useDemo('manager@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><CheckCircle2 size={14} style={{ marginRight:'4px' }}/> Manager</button>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => useDemo('admin@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><ShieldAlert size={14} style={{ marginRight:'4px' }}/> Admin</button>
+              </div>
+              <div className="grid grid-2 gap-sm">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => useDemo('employee2@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><Users size={14} style={{ marginRight:'4px' }}/> Emp 2 (Approved)</button>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => useDemo('employee3@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><Users size={14} style={{ marginRight:'4px' }}/> Emp 3 (Draft)</button>
               </div>
             </div>
           </div>

@@ -183,10 +183,17 @@ export default function EmployeeDashboard() {
                   <tr key={i}>
                     <td style={{ fontSize: '0.85rem' }}>{g.thrustArea}</td>
                     <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
-                      {g.title}
-                      {g.isShared && (
-                        <span className="badge badge-info" style={{ fontSize: '0.65rem', marginLeft: '8px' }}>Shared KPI</span>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span>{g.title}</span>
+                        {g.isShared && (
+                          <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>Shared KPI</span>
+                        )}
+                        {g.isShared && g.primaryOwnerId && (
+                          <span className="badge badge-secondary" style={{ fontSize: '0.65rem', background: 'rgba(91,95,255,0.15)', color: '#5B5FFF', border: '1px solid rgba(91,95,255,0.25)', fontWeight: 600 }}>
+                            {g.primaryOwnerId === user.uid ? '⭐ Primary Owner' : `🔒 Synced (${g.primaryOwnerName || 'Assigned Owner'})`}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="text-mono">{g.target} {g.uom === 'percent' ? '%' : ''}</td>
                     <td className="text-mono text-primary">{g.weightage}%</td>

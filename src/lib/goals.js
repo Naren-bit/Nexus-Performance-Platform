@@ -125,12 +125,21 @@ export async function pushSharedGoalToTeam(managerId, cycleId, teamMembers, goal
       achievement: 0
     };
     for (const member of teamMembers) {
-      const sheetQ = query(
-        collection(db, 'goalSheets'),
-        where('employeeId', '==', member.uid),
-        where('managerId', '==', managerId),
-        where('cycleId', '==', cycleId)
-      );
+      let sheetQ;
+      if (member.managerId && member.managerId !== managerId) {
+        sheetQ = query(
+          collection(db, 'goalSheets'),
+          where('employeeId', '==', member.uid),
+          where('cycleId', '==', cycleId)
+        );
+      } else {
+        sheetQ = query(
+          collection(db, 'goalSheets'),
+          where('employeeId', '==', member.uid),
+          where('managerId', '==', managerId),
+          where('cycleId', '==', cycleId)
+        );
+      }
       const snap = await getDocs(sheetQ);
       if (!snap.empty) {
         const sheetDoc = snap.docs[0];
@@ -146,7 +155,7 @@ export async function pushSharedGoalToTeam(managerId, cycleId, teamMembers, goal
         batch.set(sheetRef, {
           employeeId: member.uid,
           employeeName: member.name,
-          managerId: managerId,
+          managerId: member.managerId || managerId,
           cycleId: cycleId,
           department: member.department,
           status: 'draft',

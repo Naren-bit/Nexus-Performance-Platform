@@ -46,17 +46,15 @@ export async function exportAchievementReport(sheets, cycleId) {
     ws[addr].s = { font: { bold: true }, fill: { fgColor: { rgb: '5B5FFF' } } };
   }
 
-  // Force file download with correct name using Blob and anchor tag
-  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([wbout], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
+  // Force file download with correct name using base64 Data URI
+  const base64 = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+  const url = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64;
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Achievement_Report_${cycleId}_${today()}.xlsx`;
+  a.download = `Achievement_Report_${cycleId}_${today()}.xlsx`.replace(/[^a-zA-Z0-9_\-\.]/g, '_');
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
 export async function exportAuditLog(logs) {
@@ -78,14 +76,12 @@ export async function exportAuditLog(logs) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Audit Log');
   
-  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([wbout], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
+  const base64 = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+  const url = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + base64;
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Audit_Log_${today()}.xlsx`;
+  a.download = `Audit_Log_${today()}.xlsx`.replace(/[^a-zA-Z0-9_\-\.]/g, '_');
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 100);
 }

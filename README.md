@@ -18,6 +18,8 @@ The platform features three distinct user journeys. You can seamlessly switch be
 | Role | Email Address | Password |
 | :--- | :--- | :--- |
 | **Employee** | `employee@demo.nexus.com` | `Demo@1234` |
+| **Employee 2** | `employee2@demo.nexus.com` | `Demo@1234` |
+| **Employee 3** | `employee3@demo.nexus.com` | `Demo@1234` |
 | **Manager** | `manager@demo.nexus.com` | `Demo@1234` |
 | **Admin** | `admin@demo.nexus.com` | `Demo@1234` |
 
@@ -60,7 +62,7 @@ The platform features three distinct user journeys. You can seamlessly switch be
 - Real-time Org Heatmaps showing goal alignment across departments.
 - QoQ (Quarter-on-Quarter) progress tracking and dynamic score computations.
 - "Manager Effectiveness" visualizations.
-- *Note for Evaluators: To maintain complete authenticity, all Analytics charts (including the line graphs) are wired to real, dynamic Firestore data rather than relying on simulated mock data. As a result, the charts may appear empty or zeroed-out upon first login. They will automatically populate as soon as you create and submit goals and check-ins during your evaluation!*
+- *All Analytics charts are wired to real, dynamic Firestore data. The Setup script pre-seeds goal sheets with Q1 achievement data so charts render populated data from the very first login.*
 
 ### 3. Automated Escalation Engine
 - **Level 1 (L1)**: Flags missing goal submissions to direct managers.
@@ -100,7 +102,7 @@ To ensure a seamless, production-ready live pitch that is both highly robust and
    npm install
    ```
 3. **Initialize the Database:**
-   Start the dev server and navigate to `http://localhost:5173/setup` to populate the Firestore database with the required mock data and organizational hierarchy.
+   Start the dev server and navigate to `http://localhost:5173/setup` to populate the Firestore database with demo users, pre-seeded goal sheets (with Q1 achievement data), check-in records, and audit trail entries.
 4. **Run the development server:**
    ```bash
    npm run dev
@@ -120,6 +122,14 @@ To securely run Gemini AI features locally or on a live preview branch without l
    localStorage.setItem("NEXUS_GEMINI_API_KEY", "your_gemini_api_key_here");
    ```
    The frontend automatically intercepts this token to authenticate Gemini requests securely without ever committing secrets to Git!
+
+### 🔐 Security Transparency Note
+The `localStorage` approach for API key injection is a deliberate hackathon-context design decision. In a production enterprise deployment, all Gemini API calls would be routed through a secure server-side proxy (e.g., Firebase Cloud Functions or an API Gateway) so that API keys never reach the client. For this hackathon demo, `localStorage` injection was chosen because:
+1. It avoids committing secrets to a public Git repository.
+2. The key is scoped to a free-tier Gemini API with no billing exposure.
+3. It enables instant live-demo configuration without redeployment.
+
+This tradeoff is explicitly documented here for full transparency.
 
 ---
 *Built with ❤️ for the Hackathon.*

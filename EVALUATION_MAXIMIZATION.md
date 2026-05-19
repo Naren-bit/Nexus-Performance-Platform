@@ -39,6 +39,7 @@ This guide maps the **Nexus Performance Platform** directly against the five cor
     *   **Thrust-Area Alignment**: Goal creations are strictly validated against corporate Thrust Areas.
     *   **L1-L3 Escalations**: Built-in automated escalation levels for delayed check-ins.
     *   **Weightage Enforcement**: Goals are strictly verified to ensure total weightage equals exactly 100%, and each individual goal carries at least 10% weight.
+    *   **Shared Goals & Primary Owner Sync (BRD Section 2.1)**: Evaluators can push a KPI from either the Admin or Manager dashboard to all target employees or a targeted department. Goal sheet rows lock completely for title and target while permitting weightage adjustment. Updating the Primary Owner's actuals instantly and atomically propagates changes in real-time.
 *   **Hackathon Time-cycle Strategy (The Demo Time Machine)**: 
     *   *Challenge*: Judges cannot test year-long performance milestones (Goal Setting in May, Q1 in July, Q2 in October) in a 5-minute review.
     *   *Solution*: We built a functional **"Admin Demo Time Machine"** at the top of the Admin Dashboard. Judges can warp the system's global Firestore timestamps forward/backward, immediately triggering real-time UI reactions, opened check-in windows, locked goal sheets, and compliance logs.

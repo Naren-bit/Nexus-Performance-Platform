@@ -53,3 +53,12 @@ To ensure a highly secure, reliable, and pitch-perfect demo flow during the 5-mi
 - **Time-Bound Performance Cycles (The Demo Time Machine):** Evaluators need to test year-long performance milestones (Goal Setting in May, Q1 in July, Q2 in October, etc.) in a few minutes, which is chronologically impossible. We built an **"Admin Demo Time Machine"** to instantly warp the system's global Firestore timestamps forward/backward, immediately triggering real-time UI states, check-in windows, and automated L1-L3 escalation triggers.
 - **Microsoft Teams Integration:** In a mock hackathon environment, live Office 365 developer sandboxes aren't available. We built functional Microsoft Adaptive Card JSON construction engines and simulated the webhook endpoints locally, maintaining full compliance with Teams bot payloads.
 - **Authentic Analytics with Pre-Seeded Data:** We made the strict engineering decision to wire the **Analytics Dashboard (including the QoQ trend line graphs)** exclusively to real, dynamic Firestore data rather than relying on impressive-looking simulated mocks. To ensure a populated demo experience from the first login, the Setup script pre-seeds goal sheets with Q1 achievement data, check-in records, and audit trail entries — so charts, heatmaps, and export reports all render meaningful data immediately.
+
+## 7. Real-Time Shared Goals & AI KPI Calibration Sync Engine
+**The Challenge:**
+The BRD Section 2.1 required that Admins or Managers can broadcast departmental KPIs to employees, locking Goal Title, Thrust Area, UoM, and Target, but allowing weightage modifications. Crucially, a primary owner's saved check-ins must atomically sync to all other recipients in real-time.
+
+**The Solution:**
+- **Atomic Firestore Sync Transaction:** We engineered an atomic Firestore batch transaction engine. When a designated Primary Owner saves their check-in actuals, it immediately propagates the updates across all linked goal sheets.
+- **Dynamic Scoping Scenarios:** We added target scoping filters so the Admin can broadcast goals to specific departments (e.g. Engineering, Sales, Product) or the entire organization.
+- **Live Ownership indicators:** We built live, high-fidelity employee-dashboard indicators showing a premium purple badge (`⭐ Primary Owner` / `🔒 Synced (Arjun Sharma)`) on the active goals table and quarterly check-in inputs, providing absolute UX clarity.

@@ -132,7 +132,7 @@ export default function Analytics() {
   const lineData = {
     labels: quarters,
     datasets: [
-      { label: 'Org Average Progress', data: orgTrend, borderColor: '#5B5FFF', backgroundColor: 'rgba(91,95,255,0.08)', tension: 0.4, fill: true, pointBackgroundColor: '#5B5FFF', pointRadius: 6, pointHoverRadius: 8 },
+      { label: user?.role === 'manager' ? 'Team Average Progress' : 'Org Average Progress', data: orgTrend, borderColor: '#5B5FFF', backgroundColor: 'rgba(91,95,255,0.08)', tension: 0.4, fill: true, pointBackgroundColor: '#5B5FFF', pointRadius: 6, pointHoverRadius: 8 },
       { label: 'Top Performers Avg', data: topTrend, borderColor: '#00D4AA', backgroundColor: 'rgba(0,212,170,0.05)', tension: 0.4, fill: true, pointBackgroundColor: '#00D4AA', pointRadius: 6, pointHoverRadius: 8 }
     ]
   };
@@ -194,10 +194,12 @@ export default function Analytics() {
   const heatmapLabels = ['Draft', 'Submitted', 'Approved', 'Returned', 'Not Started'];
   const heatmapColors = ['rgba(255,165,2,', 'rgba(91,95,255,', 'rgba(0,212,170,', 'rgba(255,71,87,', 'rgba(74,74,106,'];
 
+  const isManager = user?.role === 'manager';
+  
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <Activity size={16}/> },
-    { id: 'team', label: 'Team Performance', icon: <Users size={16}/> },
-    { id: 'heatmap', label: 'Org Heatmap', icon: <BarChart3 size={16}/> },
+    { id: 'team', label: isManager ? 'Direct Reports' : 'Team Performance', icon: <Users size={16}/> },
+    { id: 'heatmap', label: isManager ? 'Team Heatmap' : 'Org Heatmap', icon: <BarChart3 size={16}/> },
     { id: 'ai', label: 'AI Insights', icon: <BrainCircuit size={16}/> },
   ];
 
@@ -209,7 +211,7 @@ export default function Analytics() {
       <div className="page-header">
         <div>
           <h1>Analytics & Insights</h1>
-          <p>Performance trends and organizational health</p>
+          <p>Performance trends and {isManager ? 'team' : 'organizational'} health</p>
         </div>
       </div>
 

@@ -138,6 +138,8 @@ export default function AdminDashboard() {
     } catch(e) {
       showToast('Failed to unlock goal sheet', 'error');
     }
+  };
+
   const handlePushSharedGoal = async () => {
     if (!sharedGoalForm.title || !sharedGoalForm.thrustArea || !sharedGoalForm.uom) {
       return showToast('Title, Thrust Area, and UoM are required.', 'warn');

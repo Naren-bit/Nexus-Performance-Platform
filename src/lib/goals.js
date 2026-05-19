@@ -128,6 +128,7 @@ export async function pushSharedGoalToTeam(managerId, cycleId, teamMembers, goal
       const sheetQ = query(
         collection(db, 'goalSheets'),
         where('employeeId', '==', member.uid),
+        where('managerId', '==', managerId),
         where('cycleId', '==', cycleId)
       );
       const snap = await getDocs(sheetQ);

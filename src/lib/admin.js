@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, updateDoc, writeBatch, getDocs, query, where, orderBy, limit, serverTimestamp } from './firebase-config.js';
-import { getAllGoalSheets, getAllUsers } from './goals.js';
+import { getAllGoalSheets, getAllUsers, getTeamGoalSheets } from './goals.js';
 import { getCheckins } from './checkin.js';
 
 export async function createCycle(data) {

@@ -265,10 +265,12 @@ export default function Analytics() {
       {/* TAB: TEAM PERFORMANCE */}
       {activeTab === 'team' && (
         <>
-          <div className="card" style={{ marginBottom: '24px' }}>
-            <div className="card-header"><h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={18} color="#5B5FFF"/> Manager Effectiveness — Q1 Check-in Rates</h4></div>
-            <div style={{ height: '300px', padding: '8px 0' }}><Bar data={barData} options={barOptions} /></div>
-          </div>
+          {!isManager && (
+            <div className="card" style={{ marginBottom: '24px' }}>
+              <div className="card-header"><h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={18} color="#5B5FFF"/> Manager Effectiveness — Q1 Check-in Rates</h4></div>
+              <div style={{ height: '300px', padding: '8px 0' }}><Bar data={barData} options={barOptions} /></div>
+            </div>
+          )}
 
           {/* Employee Score Table */}
           <div className="card">

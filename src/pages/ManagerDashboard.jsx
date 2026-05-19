@@ -131,7 +131,12 @@ export default function ManagerDashboard() {
     }
     setLoading(true);
     try {
-      await pushSharedGoalToTeam(user.uid, cycle.id, team, sharedGoalForm);
+      const selectedEmp = team.find(m => m.uid === sharedGoalForm.primaryOwnerId);
+      const payload = {
+        ...sharedGoalForm,
+        primaryOwnerName: selectedEmp ? selectedEmp.name : ''
+      };
+      await pushSharedGoalToTeam(user.uid, cycle.id, team, payload);
       showToast('Shared Goal pushed to all team members!', 'success');
       setShowSharedModal(false);
       setSharedGoalForm({ title: '', thrustArea: '', description: '', uom: 'numeric', uomDirection: 'max', target: '', primaryOwnerId: '' });

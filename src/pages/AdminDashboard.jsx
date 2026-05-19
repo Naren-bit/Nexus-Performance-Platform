@@ -54,7 +54,7 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     if (cycle) {
-      const orgStats = await getOrgStats(cycle.id);
+      const orgStats = await getOrgStats(cycle.id, user);
       if (orgStats) {
         setStats(orgStats);
         const escs = await runEscalationCheck(cycle, orgStats.users, orgStats.sheets, orgStats.checkins);
@@ -155,7 +155,12 @@ export default function AdminDashboard() {
 
     setPushLoading(true);
     try {
-      await pushSharedGoalToTeam(user.uid, cycle.id, targetEmployees, sharedGoalForm);
+      const selectedEmp = stats.users.find(m => m.uid === sharedGoalForm.primaryOwnerId);
+      const payload = {
+        ...sharedGoalForm,
+        primaryOwnerName: selectedEmp ? selectedEmp.name : ''
+      };
+      await pushSharedGoalToTeam(user.uid, cycle.id, targetEmployees, payload);
       showToast(`Shared Goal pushed successfully to ${targetEmployees.length} employees!`, 'success');
       setShowSharedModal(false);
       setSharedGoalForm({ title: '', thrustArea: '', description: '', uom: 'numeric', uomDirection: 'max', target: '', primaryOwnerId: '' });

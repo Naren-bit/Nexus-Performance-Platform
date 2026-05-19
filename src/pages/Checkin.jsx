@@ -551,9 +551,18 @@ export default function Checkin() {
                           </span>
                         ) : (
                           <span style={{ color: 'var(--text-muted)' }}>
-                            🔒 Pushed Departmental KPI (Primary Owner sync active. Updates will reflect automatically).
+                            🔒 Pushed Departmental KPI (Primary Owner: <strong>{g.primaryOwnerName || 'Assigned Owner'}</strong>. Updates will sync automatically).
                           </span>
                         )}
+                      </div>
+                    )}
+
+                    {g.isShared && !g.primaryOwnerId && (
+                      <div style={{ marginTop: '8px', marginBottom: '16px', padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Users size={14} color="var(--text-muted)"/>
+                        <span style={{ color: 'var(--text-muted)' }}>
+                          ℹ️ Shared KPI: Update your individual quarterly achievement below.
+                        </span>
                       </div>
                     )}
                   </>

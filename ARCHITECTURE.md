@@ -1,6 +1,8 @@
 # Architecture Diagram: Nexus Performance Platform
 
-This document contains the Mermaid.js representation of the Nexus architecture. 
+![Nexus Architecture Diagram](./architecture.png)
+
+This document contains the visual representation of the Nexus architecture. 
 **To generate a PDF or Image:** You can view this file natively in GitHub (which renders Mermaid automatically) and take a screenshot, or use a tool like [Mermaid Live Editor](https://mermaid.live/) to export it as a PNG/PDF.
 
 ```mermaid

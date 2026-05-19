@@ -46,6 +46,23 @@ export default function Checkin() {
     );
   }
 
+  if (user?.role === 'manager') {
+    return (
+      <div className="card" style={{ maxWidth: '600px', margin: '40px auto' }}>
+        <div className="empty-state">
+          <Target size={48} style={{ color: 'var(--accent-primary)', opacity: 0.8, marginBottom: '16px' }}/>
+          <h3>Manager Check-in Module</h3>
+          <p style={{ marginBottom: '24px' }}>
+            To review planned vs. achievement data and add structured check-in comments for your team members, please use the integrated <strong>Team Dashboard</strong>.
+          </p>
+          <a href="/dashboard-manager" className="btn btn-primary">
+            Go to Team Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (!sheet || sheet.status !== 'approved') {
     return (
       <div className="card" style={{ maxWidth: '600px', margin: '40px auto' }}>

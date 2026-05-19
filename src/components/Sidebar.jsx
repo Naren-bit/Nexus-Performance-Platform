@@ -52,12 +52,14 @@ export default function Sidebar() {
           </NavLink>
         )}
         
-        <NavLink 
-          to="/analytics" 
-          className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-        >
-          <span className="link-icon"><TrendingUp size={18} /></span> Analytics
-        </NavLink>
+        {(user.role === 'admin' || user.role === 'manager') && (
+          <NavLink 
+            to="/analytics" 
+            className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+          >
+            <span className="link-icon"><TrendingUp size={18} /></span> Analytics
+          </NavLink>
+        )}
         
         <div className="sidebar-section-title">Account</div>
         <a href="#" className="sidebar-link btn-logout" onClick={(e) => { e.preventDefault(); handleLogout(); }}>

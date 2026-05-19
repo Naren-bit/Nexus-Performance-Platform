@@ -340,48 +340,55 @@ export default function GoalsCreate() {
       {/* Goals List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {goals.map((g, idx) => (
-          <div key={g.goalId} className="card animate-slide-up" style={{ position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '24px', right: '24px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Goal {idx + 1} of {VALIDATION_RULES.maxGoals}
-            </div>
-            
-            <h4 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between', paddingRight: '120px' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div key={g.goalId} className="card animate-slide-up">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 Goal Details
                 {g.isShared && <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>Shared KPI</span>}
-              </span>
-              {!g.isShared && (
-                <button 
-                  type="button"
-                  onClick={() => suggestAIGoal(idx)}
-                  className="btn btn-secondary btn-sm"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', padding: '6px 12px', background: 'rgba(155,89,255,0.15)', borderColor: 'rgba(155,89,255,0.3)', color: '#b98eff', cursor: 'pointer', borderRadius: '20px' }}
-                >
-                  <BrainCircuit size={14} /> AI Suggest Goal
-                </button>
-              )}
-            </h4>
-
-            {goals.length > 1 && !g.isShared && (
-              <div style={{ position: 'absolute', top: '16px', right: '120px', display: 'flex', gap: '8px' }}>
-                <button 
-                  onClick={() => duplicateGoal(idx)}
-                  className="btn btn-ghost btn-sm" 
-                  style={{ color: 'var(--text-secondary)' }}
-                  title="Duplicate this goal"
-                >
-                  <Copy size={16} />
-                </button>
-                <button 
-                  onClick={() => removeGoal(idx)}
-                  className="btn btn-ghost btn-sm" 
-                  style={{ color: 'var(--accent-danger)' }}
-                  title="Remove goal"
-                >
-                  <Trash2 size={16} />
-                </button>
+              </h4>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                {!g.isShared && (
+                  <button 
+                    type="button"
+                    onClick={() => suggestAIGoal(idx)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', padding: '6px 12px', background: 'rgba(155,89,255,0.15)', borderColor: 'rgba(155,89,255,0.3)', color: '#b98eff', cursor: 'pointer', borderRadius: '20px' }}
+                  >
+                    <BrainCircuit size={14} /> AI Suggest Goal
+                  </button>
+                )}
+                
+                {!g.isShared && (
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button 
+                      type="button"
+                      onClick={() => duplicateGoal(idx)}
+                      className="btn btn-ghost btn-sm" 
+                      style={{ color: 'var(--text-secondary)', padding: '6px' }}
+                      title="Duplicate this goal"
+                    >
+                      <Copy size={16} />
+                    </button>
+                    {goals.length > 1 && (
+                      <button 
+                        type="button"
+                        onClick={() => removeGoal(idx)}
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: 'var(--accent-danger)', padding: '6px' }}
+                        title="Remove goal"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                )}
+                
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '12px' }}>
+                  Goal {idx + 1} of {VALIDATION_RULES.maxGoals}
+                </div>
               </div>
-            )}
+            </div>
 
             <div className="grid grid-2 gap-md">
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
-import { getGoalSheet, getTeamMembers, getTeamGoalSheets } from '../lib/goals';
+import { getGoalSheet, getTeamMembers, getTeamGoalSheets, syncPrimaryOwnerAchievement } from '../lib/goals';
 import { getCheckins, saveAchievement, completeCheckin } from '../lib/checkin';
 import { isWindowOpen, computeScore, formatScore, getScoreColor } from '../lib/utils';
 import { updateDoc, doc, serverTimestamp, getDocs, collection, query, where } from '../lib/firebase-config';
@@ -356,8 +356,18 @@ export default function Checkin() {
       updatedSheet.goals[goalIdx].computedScores = updatedSheet.goals[goalIdx].computedScores || {};
       updatedSheet.goals[goalIdx].computedScores[activeQuarter] = newScore;
       setSheet(updatedSheet);
-      showToast('Progress saved!', 'success');
-    } catch(e) { showToast('Failed to save progress.', 'error'); }
+
+      if (goal.isShared && goal.primaryOwnerId === user.uid) {
+        showToast('Syncing progress to all team members...', 'info');
+        await syncPrimaryOwnerAchievement(cycle.id, goal.id, activeQuarter, val, comment);
+        showToast('Progress synced successfully across all team sheets!', 'success');
+      } else {
+        showToast('Progress saved!', 'success');
+      }
+    } catch(e) { 
+      console.error(e);
+      showToast('Failed to save progress.', 'error'); 
+    }
     setSavingGoalId(null);
   };
 
@@ -502,31 +512,53 @@ export default function Checkin() {
               )}
 
               {/* Input Fields */}
-              <div className="grid grid-3 gap-md" style={{ alignItems: 'end', marginBottom: '8px' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">{activeQuarter} Actual Value</label>
-                  <input 
-                    type={inputType} className="form-input" value={actual}
-                    onChange={(e) => handleEditChange(i, 'actual', e.target.value)}
-                    disabled={!isOpen || isDone}
-                    placeholder={g.uom === 'zero' ? "Enter 0 if achieved" : "Enter actual..."}
-                  />
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Comment / Notes</label>
-                  <input 
-                    className="form-input" value={comment}
-                    onChange={(e) => handleEditChange(i, 'comment', e.target.value)}
-                    disabled={!isOpen || isDone}
-                    placeholder="Optional details..."
-                  />
-                </div>
-                {isOpen && !isDone && (
-                  <button className="btn btn-primary" style={{ height: '44px' }} onClick={() => saveGoalProgress(i)} disabled={savingGoalId === i}>
-                    {savingGoalId === i ? <div className="spinner" style={{width: 16, height:16, borderColor: '#fff', borderTopColor: 'transparent'}}/> : <Save size={16}/>} Save
-                  </button>
-                )}
-              </div>
+              {(() => {
+                const isProgressDisabled = !isOpen || isDone || (g.isShared && g.primaryOwnerId && g.primaryOwnerId !== user.uid);
+                return (
+                  <>
+                    <div className="grid grid-3 gap-md" style={{ alignItems: 'end', marginBottom: '8px' }}>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label">{activeQuarter} Actual Value</label>
+                        <input 
+                          type={inputType} className="form-input" value={actual}
+                          onChange={(e) => handleEditChange(i, 'actual', e.target.value)}
+                          disabled={isProgressDisabled}
+                          placeholder={g.uom === 'zero' ? "Enter 0 if achieved" : "Enter actual..."}
+                        />
+                      </div>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label">Comment / Notes</label>
+                        <input 
+                          className="form-input" value={comment}
+                          onChange={(e) => handleEditChange(i, 'comment', e.target.value)}
+                          disabled={isProgressDisabled}
+                          placeholder="Optional details..."
+                        />
+                      </div>
+                      {isOpen && !isDone && !isProgressDisabled && (
+                        <button className="btn btn-primary" style={{ height: '44px' }} onClick={() => saveGoalProgress(i)} disabled={savingGoalId === i}>
+                          {savingGoalId === i ? <div className="spinner" style={{width: 16, height:16, borderColor: '#fff', borderTopColor: 'transparent'}}/> : <Save size={16}/>} Save
+                        </button>
+                      )}
+                    </div>
+
+                    {g.isShared && g.primaryOwnerId && (
+                      <div style={{ marginTop: '8px', marginBottom: '16px', padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(91,95,255,0.05)', border: '1px solid rgba(91,95,255,0.1)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Users size={14} color="var(--accent-primary)"/>
+                        {g.primaryOwnerId === user.uid ? (
+                          <span style={{ color: '#00D4AA', fontWeight: 600 }}>
+                            ⭐ You are the Primary Owner. Your saved actuals will automatically sync to all team members!
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>
+                            🔒 Pushed Departmental KPI (Primary Owner sync active. Updates will reflect automatically).
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
 
               {/* Formula Display */}
               {formulaText && (

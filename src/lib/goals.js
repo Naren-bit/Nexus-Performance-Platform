@@ -192,3 +192,67 @@ export async function syncSharedGoalAchievement(managerId, cycleId, sharedGoalTi
     throw error;
   }
 }
+
+export async function syncPrimaryOwnerAchievement(cycleId, sharedGoalId, quarter, actualValue, commentValue) {
+  try {
+    const q = query(
+      collection(db, 'goalSheets'),
+      where('cycleId', '==', cycleId)
+    );
+    const snap = await getDocs(q);
+    const batch = writeBatch(db);
+    let count = 0;
+    
+    snap.docs.forEach(sheetDoc => {
+      const data = sheetDoc.data();
+      let updated = false;
+      
+      const newGoals = (data.goals || []).map(g => {
+        if (g.isShared && g.id === sharedGoalId) {
+          updated = true;
+          
+          const achievements = g.achievements || {};
+          achievements[quarter] = { actual: actualValue, comment: commentValue };
+          
+          const computedScores = g.computedScores || {};
+          const targetNum = Number(g.target) || 1;
+          const actualNum = Number(actualValue) || 0;
+          let newScore = 0;
+          
+          if (g.uom === 'numeric' || g.uom === 'percentage' || g.uom === 'percent') {
+            if (g.uomDirection === 'max') {
+              newScore = actualNum === 0 ? 0 : targetNum / actualNum;
+            } else {
+              newScore = targetNum === 0 ? 0 : actualNum / targetNum;
+            }
+          } else if (g.uom === 'zero') {
+            newScore = actualNum === 0 ? 1 : 0;
+          } else if (g.uom === 'timeline') {
+            newScore = actualValue === g.target ? 1 : 0;
+          }
+          
+          newScore = Math.min(1.0, Math.max(0.0, newScore));
+          computedScores[quarter] = newScore;
+          
+          return { ...g, achievements, computedScores };
+        }
+        return g;
+      });
+      
+      if (updated) {
+        batch.update(sheetDoc.ref, { 
+          goals: newGoals,
+          updatedAt: serverTimestamp()
+        });
+        count++;
+      }
+    });
+    
+    await batch.commit();
+    console.log(`Successfully synced primary owner achievements to ${count} sheets`);
+    return true;
+  } catch (error) {
+    console.error('Error syncing primary owner achievements:', error);
+    throw error;
+  }
+}

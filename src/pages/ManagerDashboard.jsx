@@ -25,7 +25,7 @@ export default function ManagerDashboard() {
   // Shared Goals State
   const [showSharedModal, setShowSharedModal] = useState(false);
   const [sharedGoalForm, setSharedGoalForm] = useState({
-    title: '', thrustArea: '', description: '', uom: 'numeric', uomDirection: 'max', target: ''
+    title: '', thrustArea: '', description: '', uom: 'numeric', uomDirection: 'max', target: '', primaryOwnerId: ''
   });
   const [suggestingAI, setSuggestingAI] = useState(false);
   const [aiReasoning, setAiReasoning] = useState('');
@@ -134,7 +134,7 @@ export default function ManagerDashboard() {
       await pushSharedGoalToTeam(user.uid, cycle.id, team, sharedGoalForm);
       showToast('Shared Goal pushed to all team members!', 'success');
       setShowSharedModal(false);
-      setSharedGoalForm({ title: '', thrustArea: '', description: '', uom: 'numeric', uomDirection: 'max', target: '' });
+      setSharedGoalForm({ title: '', thrustArea: '', description: '', uom: 'numeric', uomDirection: 'max', target: '', primaryOwnerId: '' });
       setAiReasoning('');
       await loadData();
     } catch(e) {
@@ -607,6 +607,16 @@ export default function ManagerDashboard() {
                   onChange={e => setSharedGoalForm({...sharedGoalForm, description: e.target.value})} 
                   placeholder="Provide context, deliverables, and focus areas..." 
                 />
+              </div>
+
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <label className="form-label">Designated Primary Owner (Optional)</label>
+                <select className="form-input" value={sharedGoalForm.primaryOwnerId} onChange={e => setSharedGoalForm({...sharedGoalForm, primaryOwnerId: e.target.value})}>
+                  <option value="">No Primary Owner (Each updates own actuals)</option>
+                  {team.map(m => (
+                    <option key={m.uid} value={m.uid}>{m.name}</option>
+                  ))}
+                </select>
               </div>
 
               {aiReasoning && (

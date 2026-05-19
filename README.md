@@ -132,4 +132,3 @@ The `localStorage` approach for API key injection is a deliberate hackathon-cont
 This tradeoff is explicitly documented here for full transparency.
 
 ---
-*Built with ❤️ for the Hackathon.*

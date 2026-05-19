@@ -87,6 +87,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAutoFillCycle = () => {
+    const now = new Date();
+    const fmt = (d) => d.toISOString().split('T')[0];
+    const offset = (days) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() + days);
+      return fmt(d);
+    };
+
+    setCycleForm({
+      cycleId: 'FY-2025-2026',
+      name: 'FY 2025-2026',
+      goalSettingOpen: offset(-30),
+      goalSettingClose: offset(-9),
+      q1Open: offset(-8),
+      q1Close: offset(27),
+      q2Open: offset(40),
+      q2Close: offset(70),
+      q3Open: offset(130),
+      q3Close: offset(160),
+      q4Open: offset(220),
+      q4Close: offset(250)
+    });
+    showToast('Auto-filled with active Q1 dates!', 'success');
+  };
+
   const handleUnlock = async () => {
     if (!unlockData.reason) {
       showToast('Reason is required', 'warn');
@@ -458,6 +484,15 @@ export default function AdminDashboard() {
               <button className="modal-close" onClick={() => setShowCycleModal(false)}>✕</button>
             </div>
             <div className="modal-body">
+              <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button 
+                  className="btn btn-secondary btn-sm" 
+                  onClick={handleAutoFillCycle}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(91,95,255,0.15)', borderColor: 'rgba(91,95,255,0.3)', color: '#fff', cursor: 'pointer' }}
+                >
+                  <Zap size={14} color="var(--accent-primary)"/> Auto-Fill Demo Dates
+                </button>
+              </div>
               <div className="grid grid-2 gap-md">
                 <div className="form-group"><label className="form-label">Cycle ID</label><input className="form-input" value={cycleForm.cycleId} onChange={e => setCycleForm({...cycleForm, cycleId: e.target.value})} placeholder="e.g. FY2025-26" /></div>
                 <div className="form-group"><label className="form-label">Cycle Name</label><input className="form-input" value={cycleForm.name} onChange={e => setCycleForm({...cycleForm, name: e.target.value})} placeholder="e.g. FY 2025-26" /></div>

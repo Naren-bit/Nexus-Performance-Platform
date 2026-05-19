@@ -42,16 +42,12 @@ service cloud.firestore {
     }
 
     // ── Goal Sheets Collection ──
-    // Employees can read/write their own sheets.
-    // Managers can read sheets where they are the assigned manager.
-    // Managers can update sheets (for approval/return).
-    // Admins can read/update all sheets (for unlock).
+    // All authenticated users can read sheets (for org-wide analytics visibility).
+    // Employees can create their own sheets.
+    // Managers can update sheets where they are assigned manager.
+    // Admins can update all sheets (for unlock).
     match /goalSheets/{sheetId} {
-      allow read: if isAuthenticated() && (
-        isOwner(resource.data.employeeId) ||
-        resource.data.managerId == request.auth.uid ||
-        isAdmin()
-      );
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.employeeId;
       allow update: if isAuthenticated() && (
         isOwner(resource.data.employeeId) ||

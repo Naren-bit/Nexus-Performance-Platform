@@ -27,10 +27,8 @@ export default function Analytics() {
   useEffect(() => {
     async function loadData() {
       if (cycle && user) {
-        if (user.role === 'admin' || user.role === 'manager') {
-          const s = await getOrgStats(cycle.id);
-          setStats(s);
-        }
+        const s = await getOrgStats(cycle.id);
+        setStats(s);
       }
       setLoading(false);
     }

@@ -182,7 +182,12 @@ export default function EmployeeDashboard() {
                 {goals.map((g, i) => (
                   <tr key={i}>
                     <td style={{ fontSize: '0.85rem' }}>{g.thrustArea}</td>
-                    <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{g.title}</td>
+                    <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
+                      {g.title}
+                      {g.isShared && (
+                        <span className="badge badge-info" style={{ fontSize: '0.65rem', marginLeft: '8px' }}>Shared KPI</span>
+                      )}
+                    </td>
                     <td className="text-mono">{g.target} {g.uom === 'percent' ? '%' : ''}</td>
                     <td className="text-mono text-primary">{g.weightage}%</td>
                     <td>{getStatusBadge(g.status || 'not_started')}</td>

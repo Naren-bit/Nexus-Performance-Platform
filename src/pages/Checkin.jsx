@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
-import { getGoalSheet } from '../lib/goals';
-import { getCheckins, saveAchievement } from '../lib/checkin';
+import { getGoalSheet, getTeamMembers, getTeamGoalSheets } from '../lib/goals';
+import { getCheckins, saveAchievement, completeCheckin } from '../lib/checkin';
 import { isWindowOpen, computeScore, formatScore, getScoreColor } from '../lib/utils';
-import { updateDoc, doc, serverTimestamp } from '../lib/firebase-config';
+import { updateDoc, doc, serverTimestamp, getDocs, collection, query, where } from '../lib/firebase-config';
 import { db } from '../lib/firebase-config';
-import { Save, CheckCircle, Lock, Target, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
+import { Save, CheckCircle, Lock, Target, TrendingUp, Clock, AlertTriangle, Users, ChevronRight, MessageSquare } from 'lucide-react';
 
 export default function Checkin() {
   const { user, cycle } = useAuth();
@@ -18,13 +18,50 @@ export default function Checkin() {
   const [savingGoalId, setSavingGoalId] = useState(null);
   const [edits, setEdits] = useState({});
 
+  // Manager specific states
+  const [team, setTeam] = useState([]);
+  const [teamSheets, setTeamSheets] = useState([]);
+  const [teamCheckins, setTeamCheckins] = useState([]);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedSheet, setSelectedSheet] = useState(null);
+  const [checkinComment, setCheckinComment] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+
   useEffect(() => {
     async function loadData() {
       if (cycle && user) {
-        const s = await getGoalSheet(user.uid, cycle.id);
-        const c = await getCheckins(user.uid, cycle.id);
-        setSheet(s);
-        setCheckins(c);
+        if (user.role === 'manager') {
+          // Fetch team members
+          const members = await getTeamMembers(user.uid);
+          setTeam(members);
+
+          // Fetch team goal sheets
+          const sheetsData = await getTeamGoalSheets(user.uid, cycle.id);
+          setTeamSheets(sheetsData);
+
+          // Fetch all checkins for the cycle under this manager
+          const q = query(
+            collection(db, 'checkins'),
+            where('managerId', '==', user.uid),
+            where('cycleId', '==', cycle.id)
+          );
+          const snap = await getDocs(q);
+          const cData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setTeamCheckins(cData);
+
+          // Auto-select first member if exists
+          if (members.length > 0) {
+            setSelectedMember(members[0]);
+            const matchSheet = sheetsData.find(s => s.employeeId === members[0].uid);
+            setSelectedSheet(matchSheet || null);
+          }
+        } else {
+          const s = await getGoalSheet(user.uid, cycle.id);
+          const c = await getCheckins(user.uid, cycle.id);
+          setSheet(s);
+          setCheckins(c);
+        }
+
         for (const q of ['Q1','Q2','Q3','Q4']) {
           if (cycle?.quarters?.[q] && isWindowOpen(cycle.quarters[q])) {
             setActiveQuarter(q);
@@ -37,6 +74,29 @@ export default function Checkin() {
     loadData();
   }, [cycle, user]);
 
+  const handleManagerCheckinSubmit = async (quarter) => {
+    if (!selectedSheet || !selectedMember) return;
+    setSubmittingComment(true);
+    try {
+      await completeCheckin(selectedSheet.id, selectedMember.uid, user.uid, quarter, cycle.id, checkinComment);
+      showToast(`${quarter} check-in successfully reviewed and completed!`, 'success');
+      setCheckinComment('');
+      
+      // Refresh checkins data
+      const qQuery = query(
+        collection(db, 'checkins'),
+        where('managerId', '==', user.uid),
+        where('cycleId', '==', cycle.id)
+      );
+      const snap = await getDocs(qQuery);
+      const cData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setTeamCheckins(cData);
+    } catch(e) {
+      showToast('Failed to complete check-in.', 'error');
+    }
+    setSubmittingComment(false);
+  };
+
   if (loading) {
     return (
       <div style={{ maxWidth: '900px', margin: '0 auto', paddingBottom: '40px' }}>
@@ -48,16 +108,206 @@ export default function Checkin() {
 
   if (user?.role === 'manager') {
     return (
-      <div className="card" style={{ maxWidth: '600px', margin: '40px auto' }}>
-        <div className="empty-state">
-          <Target size={48} style={{ color: 'var(--accent-primary)', opacity: 0.8, marginBottom: '16px' }}/>
-          <h3>Manager Check-in Module</h3>
-          <p style={{ marginBottom: '24px' }}>
-            To review planned vs. achievement data and add structured check-in comments for your team members, please use the integrated <strong>Team Dashboard</strong>.
-          </p>
-          <a href="/dashboard-manager" className="btn btn-primary">
-            Go to Team Dashboard
-          </a>
+      <div className="animate-fade-in" style={{ paddingBottom: '40px' }}>
+        <div className="page-header">
+          <div>
+            <h1>Manager Check-in Module</h1>
+            <p>View Planned vs. Achievement data and log structured comments for your direct reports</p>
+          </div>
+        </div>
+
+        <div className="grid grid-3" style={{ gap: '24px', alignItems: 'start' }}>
+          {/* Team Members List */}
+          <div className="card" style={{ gridColumn: 'span 1', padding: '16px' }}>
+            <h4 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Users size={18} color="var(--accent-primary)"/> Team Members
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {team.length === 0 ? (
+                <p className="text-muted text-center" style={{ padding: '20px 0' }}>No team members found.</p>
+              ) : (
+                team.map(m => {
+                  const active = selectedMember?.uid === m.uid;
+                  const empSheet = teamSheets.find(s => s.employeeId === m.uid);
+                  const isSheetApproved = empSheet?.status === 'approved';
+                  return (
+                    <div
+                      key={m.uid}
+                      onClick={() => {
+                        setSelectedMember(m);
+                        setSelectedSheet(empSheet || null);
+                        setCheckinComment('');
+                      }}
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '12px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                        background: active ? 'rgba(91,95,255,0.08)' : 'transparent',
+                        border: active ? '1px solid var(--accent-primary)' : '1px solid var(--border)',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.9rem', color: active ? 'var(--accent-primary)' : 'var(--text-primary)' }}>{m.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.department}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {isSheetApproved ? (
+                          <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>Approved</span>
+                        ) : (
+                          <span className="badge badge-secondary" style={{ fontSize: '0.65rem' }}>No Goals</span>
+                        )}
+                        <ChevronRight size={16} style={{ opacity: active ? 1 : 0.3 }}/>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Member Details & Goal Achievement View */}
+          <div className="card" style={{ gridColumn: 'span 2', minHeight: '400px' }}>
+            {selectedMember ? (
+              <>
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '16px', marginBottom: '24px' }}>
+                  <h3 style={{ margin: 0 }}>{selectedMember.name}</h3>
+                  <p className="text-muted" style={{ margin: '4px 0 0 0', fontSize: '0.85rem' }}>{selectedMember.department} · Direct Report</p>
+                </div>
+
+                {!selectedSheet || !selectedSheet.goals || selectedSheet.goals.length === 0 ? (
+                  <div className="empty-state">
+                    <Lock size={48} style={{ color: 'var(--accent-primary)', opacity: 0.5, marginBottom: '16px' }}/>
+                    <h3>Goals Not Approved / Started</h3>
+                    <p>{selectedMember.name} has not submitted their goals, or they are not approved yet.</p>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Quarters Selection */}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+                      {['Q1', 'Q2', 'Q3', 'Q4'].map(q => {
+                        const qOpen = cycle?.quarters?.[q] && isWindowOpen(cycle.quarters[q]);
+                        const isDone = teamCheckins.some(c => c.employeeId === selectedMember.uid && c.quarter === q);
+                        const isSelected = activeQuarter === q;
+                        return (
+                          <button
+                            key={q}
+                            className={`btn ${isSelected ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => {
+                              setActiveQuarter(q);
+                              setCheckinComment('');
+                            }}
+                            style={{ flex: 1, borderRadius: 'var(--radius-full)' }}
+                          >
+                            {q} {isDone && <CheckCircle size={14} style={{ marginLeft: '4px' }}/>}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Window Warning */}
+                    {!(cycle?.quarters?.[activeQuarter] && isWindowOpen(cycle.quarters[activeQuarter])) && (
+                      <div className="callout callout-warn" style={{ marginBottom: '24px' }}>
+                        <Lock size={16}/> <span>{activeQuarter} check-in window is currently <strong>closed</strong>.</span>
+                      </div>
+                    )}
+
+                    {/* Goal Progress View */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                      {selectedSheet.goals.map((g, i) => {
+                        const achievement = g.achievements?.[activeQuarter];
+                        const actual = achievement?.actual;
+                        const comment = achievement?.comment;
+                        const score = g.computedScores?.[activeQuarter];
+                        const scoreColor = getScoreColor(score);
+
+                        return (
+                          <div key={g.goalId} style={{ padding: '16px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                              <div>
+                                <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{g.title}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                  Target: <span className="text-mono" style={{ color: 'var(--text-secondary)' }}>{g.target}</span> · 
+                                  Weightage: <span className="text-mono" style={{ color: 'var(--text-secondary)' }}>{g.weightage}%</span> · 
+                                  UoM: <span style={{ color: 'var(--text-secondary)' }}>{g.uom}</span>
+                                </div>
+                              </div>
+                              {score != null && (
+                                <div className="badge" style={{ background: `${scoreColor}15`, color: scoreColor, height: 'fit-content' }}>
+                                  Score: {formatScore(score)}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="grid grid-2 gap-sm" style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: 'var(--radius-sm)' }}>
+                              <div>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Planned vs Achievement</span>
+                                <div className="text-mono" style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', marginTop: '2px' }}>
+                                  Target: {g.target} | Actual: <span style={{ color: 'var(--accent-primary)' }}>{actual ?? '—'}</span>
+                                </div>
+                              </div>
+                              <div>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Employee Notes</span>
+                                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                  {comment || 'No notes added.'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Structured Manager Evaluation Form */}
+                    {teamCheckins.some(c => c.employeeId === selectedMember.uid && c.quarter === activeQuarter) ? (
+                      <div className="callout callout-success" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div><strong>✅ Check-in Evaluation Complete</strong></div>
+                        <p style={{ fontSize: '0.85rem', margin: 0 }}>
+                          Manager Feedback logged: "{teamCheckins.find(c => c.employeeId === selectedMember.uid && c.quarter === activeQuarter)?.managerComment || 'No comments logged.'}"
+                        </p>
+                      </div>
+                    ) : (
+                      cycle?.quarters?.[activeQuarter] && isWindowOpen(cycle.quarters[activeQuarter]) ? (
+                        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+                          <h5 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <MessageSquare size={16} color="var(--accent-primary)"/> Add Structured Evaluation Comment
+                          </h5>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                            Document your performance discussion and log feedback. This comment will be logged into the audit log and check-in register.
+                          </p>
+                          <textarea
+                            className="form-textarea"
+                            rows={3}
+                            placeholder="Type performance review feedback for this quarter..."
+                            value={checkinComment}
+                            onChange={e => setCheckinComment(e.target.value)}
+                            style={{ marginBottom: '16px' }}
+                          />
+                          <button
+                            className="btn btn-primary"
+                            onClick={() => handleManagerCheckinSubmit(activeQuarter)}
+                            disabled={submittingComment || !checkinComment.trim()}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                          >
+                            {submittingComment ? 'Logging...' : 'Mark Quarter Check-in Complete'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="callout callout-warn">
+                          <span>Check-in comments can only be submitted while the {activeQuarter} window is open.</span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="empty-state">
+                <Users size={48} style={{ color: 'var(--accent-primary)', opacity: 0.5, marginBottom: '16px' }}/>
+                <h3>Select a Team Member</h3>
+                <p>Select a direct report from the left sidebar to view their planned vs. actual check-ins.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

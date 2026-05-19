@@ -28,7 +28,7 @@ export default function Analytics() {
     async function loadData() {
       if (cycle && user) {
         if (user.role === 'admin' || user.role === 'manager') {
-          const s = await getOrgStats(cycle.id);
+          const s = await getOrgStats(cycle.id, user);
           setStats(s);
         }
       }

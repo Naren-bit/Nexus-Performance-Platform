@@ -67,13 +67,29 @@ export async function getAuditLogs(max = 50) {
   }
 }
 
-export async function getOrgStats(cycleId) {
+export async function getOrgStats(cycleId, user) {
   try {
-    const users = await getAllUsers();
-    const sheets = await getAllGoalSheets(cycleId);
+    let users = await getAllUsers();
+    let sheets = [];
+    
+    if (user.role === 'admin') {
+      sheets = await getAllGoalSheets(cycleId);
+    } else if (user.role === 'manager') {
+      users = users.filter(u => u.managerId === user.uid);
+      sheets = await getTeamGoalSheets(user.uid, cycleId);
+    } else {
+      return null;
+    }
+
     const checkinsQ = query(collection(db, 'checkins'), where('cycleId', '==', cycleId));
     const checkinsSnap = await getDocs(checkinsQ);
-    const checkins = checkinsSnap.docs.map(d => d.data());
+    let checkins = checkinsSnap.docs.map(d => d.data());
+
+    if (user.role === 'manager') {
+      // Only keep checkins for the manager's team
+      const teamUids = users.map(u => u.uid);
+      checkins = checkins.filter(c => teamUids.includes(c.employeeId));
+    }
 
     const totalEmployees = users.filter(u => u.role === 'employee').length;
     const submittedSheets = sheets.filter(s => s.status === 'submitted' || s.status === 'approved');

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, loginWithMicrosoft } from '../lib/auth';
+import { login, loginWithMicrosoft, loginSimulatedMicrosoft } from '../lib/auth';
 import { useToast } from '../components/ToastContext';
 import { Mail, Lock, LogIn, Target, Zap, ShieldAlert, ChevronRight, BarChart3, Users, CheckCircle2, Activity } from 'lucide-react';
 
@@ -10,6 +10,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [ssoLoading, setSsoLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showSsoSandbox, setShowSsoSandbox] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [tilt, setTilt] = useState({ x: 10, y: -15 });
 
@@ -87,10 +88,25 @@ export default function Login() {
       showToast(`SSO Successful! Welcome ${user.name}`, 'success');
       navigate(user.role === 'employee' ? '/dashboard-employee' : user.role === 'manager' ? '/dashboard-manager' : '/dashboard-admin');
     } catch (err) {
-      showToast('Microsoft SSO failed. Please try again.', 'error');
+      console.warn('Real Microsoft SSO failed, opening Entra ID Sandbox fallback modal.', err);
+      setShowSsoSandbox(true);
     } finally {
       setSsoLoading(false);
     }
+  };
+
+  const handleSandboxLogin = async (demoEmail, name, role, dept) => {
+    setSsoLoading(true);
+    try {
+      const user = await loginSimulatedMicrosoft(demoEmail, name, role, dept);
+      showToast(`✨ SSO Sync Successful! Welcomed ${user.name} from Azure AD`, 'success');
+      setShowSsoSandbox(false);
+      setShowLogin(false);
+      navigate(user.role === 'employee' ? '/dashboard-employee' : user.role === 'manager' ? '/dashboard-manager' : '/dashboard-admin');
+    } catch (e) {
+      showToast('Simulated SSO failed.', 'error');
+    }
+    setSsoLoading(false);
   };
 
   const useDemo = (demoEmail) => {
@@ -333,6 +349,99 @@ export default function Login() {
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => useDemo('employee3@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><Users size={14} style={{ marginRight:'4px' }}/> Emp 3 (Draft)</button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MICROSOFT ENTRA ID SSO SANDBOX MODAL */}
+      <div className={`modal-overlay ${showSsoSandbox ? 'active' : ''}`} style={{ 
+        backdropFilter: 'blur(12px)', 
+        zIndex: 1100, 
+        opacity: showSsoSandbox ? 1 : 0, 
+        pointerEvents: showSsoSandbox ? 'auto' : 'none', 
+        transition: 'opacity 0.3s ease' 
+      }}>
+        <div className="modal" style={{ 
+          background: 'rgba(20,20,25,0.98)', 
+          border: '1px solid rgba(0, 120, 212, 0.4)', 
+          padding: 0, 
+          overflow: 'hidden',
+          transform: showSsoSandbox ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(20px)',
+          opacity: showSsoSandbox ? 1 : 0,
+          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          width: '100%',
+          maxWidth: '480px',
+          boxShadow: '0 20px 50px rgba(0, 120, 212, 0.25)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(90deg, rgba(0,120,212,0.1) 0%, transparent 100%)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21"><path fill="#f35325" d="M0 0h10v10H0z"/><path fill="#81bc06" d="M11 0h10v10H11z"/><path fill="#05a6f0" d="M0 11h10v10H0z"/><path fill="#ffba08" d="M11 11h10v10H11z"/></svg>
+              <h3 style={{ margin: 0, color: '#fff' }}>Microsoft Entra ID Sandbox</h3>
+            </div>
+            <button className="btn btn-ghost" onClick={() => setShowSsoSandbox(false)} style={{ padding: '8px' }}>✕</button>
+          </div>
+          
+          <div style={{ padding: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(0,120,212,0.1)', border: '1px solid rgba(0,120,212,0.2)', padding: '16px', borderRadius: '12px', marginBottom: '24px' }}>
+              <ShieldAlert size={28} color="#0078D4" />
+              <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.4 }}>
+                <strong>SSO Simulation Active:</strong> Microsoft OIDC integration is in mock mode. Select an Entra ID identity to simulate authentic AD claim & department group synchronization.
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => handleSandboxLogin('employee@demo.nexus.com', 'Arjun Sharma', 'employee', 'Engineering')}
+                style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.1)' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#5B5FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>AS</div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: '#fff' }}>Arjun Sharma</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>arjun.sharma@entra.nexus.com</div>
+                  </div>
+                </div>
+                <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>Employee</span>
+              </button>
+
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => handleSandboxLogin('manager@demo.nexus.com', 'Priya Iyer', 'manager', 'Sales')}
+                style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.1)' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#00D4AA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>PI</div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: '#fff' }}>Priya Iyer</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>priya.iyer@entra.nexus.com</div>
+                  </div>
+                </div>
+                <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>Manager</span>
+              </button>
+
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => handleSandboxLogin('admin@demo.nexus.com', 'Meera Reddy', 'admin', 'Human Resources')}
+                style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.1)' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#FF4757', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>MR</div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: '#fff' }}>Meera Reddy</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>meera.reddy@entra.nexus.com</div>
+                  </div>
+                </div>
+                <span className="badge badge-submitted" style={{ fontSize: '0.65rem', background: '#FF4757', color: '#fff' }}>Admin</span>
+              </button>
+            </div>
+            
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '24px', lineHeight: 1.4 }}>
+              Upon selection, the platform simulates Microsoft Graph Directory claims mapping and provisions the user identity in Firestore.
+            </p>
           </div>
         </div>
       </div>

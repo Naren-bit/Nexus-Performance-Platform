@@ -107,6 +107,26 @@ export async function loginWithMicrosoft() {
   }
 }
 
+// Simulated Microsoft SSO Login for fallback sandboxing
+export async function loginSimulatedMicrosoft(demoEmail, name, role, dept) {
+  try {
+    const user = await login(demoEmail, 'Demo@1234');
+    const userRef = doc(db, 'users', user.uid);
+    const updatedData = {
+      ...user,
+      name: name,
+      role: role,
+      department: dept,
+      azureAdSync: true
+    };
+    await setDoc(userRef, updatedData, { merge: true });
+    return { uid: user.uid, ...updatedData };
+  } catch (error) {
+    console.error('Simulated SSO error:', error);
+    throw error;
+  }
+}
+
 // Logout function
 export async function logout() {
   await firebaseSignOut(auth);

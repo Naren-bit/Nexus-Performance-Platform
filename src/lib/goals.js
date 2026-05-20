@@ -10,65 +10,7 @@ export async function getGoalSheet(employeeId, cycleId) {
     );
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
-    
-    const docSnap = snapshot.docs[0];
-    const sheetData = { id: docSnap.id, ...docSnap.data() };
-    
-    // Proactive Self-healing: Deduplicate duplicate goal titles
-    if (sheetData.goals && sheetData.goals.length > 0) {
-      const uniqueGoals = [];
-      const seenTitles = new Set();
-      let hasDuplicates = false;
-      
-      for (const goal of sheetData.goals) {
-        const titleNormalized = goal.title?.trim().toLowerCase();
-        if (!titleNormalized) {
-          uniqueGoals.push(goal);
-          continue;
-        }
-        
-        if (seenTitles.has(titleNormalized)) {
-          hasDuplicates = true;
-          const existingIdx = uniqueGoals.findIndex(g => g.title?.trim().toLowerCase() === titleNormalized);
-          if (existingIdx !== -1) {
-            const existing = uniqueGoals[existingIdx];
-            uniqueGoals[existingIdx] = {
-              ...existing,
-              ...goal,
-              isShared: existing.isShared || goal.isShared,
-              id: existing.id || goal.id,
-              sharedOwnerId: existing.sharedOwnerId || goal.sharedOwnerId,
-              primaryOwnerId: existing.primaryOwnerId || goal.primaryOwnerId,
-              primaryOwnerName: existing.primaryOwnerName || goal.primaryOwnerName,
-              weightage: existing.isShared ? goal.weightage : existing.weightage
-            };
-          }
-        } else {
-          seenTitles.add(titleNormalized);
-          uniqueGoals.push(goal);
-        }
-      }
-      
-      if (hasDuplicates) {
-        const totalWeight = uniqueGoals.reduce((sum, g) => sum + (Number(g.weightage) || 0), 0);
-        let correctedStatus = sheetData.status || 'draft';
-        if (totalWeight !== 100 && (sheetData.status === 'approved' || sheetData.status === 'submitted')) {
-          correctedStatus = 'draft';
-        }
-        
-        sheetData.goals = uniqueGoals;
-        sheetData.status = correctedStatus;
-        
-        const docRef = doc(db, 'goalSheets', sheetData.id);
-        updateDoc(docRef, {
-          goals: uniqueGoals,
-          status: correctedStatus,
-          updatedAt: serverTimestamp()
-        }).catch(err => console.warn('Self-healing sync failed:', err));
-      }
-    }
-    
-    return sheetData;
+    return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
   } catch (error) {
     console.error('Error getting goal sheet:', error);
     return null;
@@ -203,31 +145,12 @@ export async function pushSharedGoalToTeam(managerId, cycleId, teamMembers, goal
         const sheetDoc = snap.docs[0];
         const existingGoals = sheetDoc.data().goals || [];
         const hasGoalId = existingGoals.find(g => g.id === sharedId);
-        const hasGoalTitle = existingGoals.find(g => g.title?.trim().toLowerCase() === goalData.title?.trim().toLowerCase());
         
-        if (!hasGoalId && !hasGoalTitle) {
+        if (!hasGoalId) {
           const currentStatus = sheetDoc.data().status || 'draft';
           const newStatus = (currentStatus === 'approved' || currentStatus === 'submitted') ? 'draft' : currentStatus;
           batch.update(sheetDoc.ref, {
             goals: [...existingGoals, newGoal],
-            status: newStatus,
-            updatedAt: serverTimestamp()
-          });
-        } else if (hasGoalTitle && !hasGoalTitle.isShared) {
-          const currentStatus = sheetDoc.data().status || 'draft';
-          const newStatus = (currentStatus === 'approved' || currentStatus === 'submitted') ? 'draft' : currentStatus;
-          const updatedGoals = existingGoals.map(g => {
-            if (g.title?.trim().toLowerCase() === goalData.title?.trim().toLowerCase()) {
-              return {
-                ...g,
-                ...newGoal,
-                weightage: g.weightage || 10
-              };
-            }
-            return g;
-          });
-          batch.update(sheetDoc.ref, {
-            goals: updatedGoals,
             status: newStatus,
             updatedAt: serverTimestamp()
           });

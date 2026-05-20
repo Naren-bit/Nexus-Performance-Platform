@@ -338,6 +338,13 @@ export default function Login() {
             </button>
 
             <div style={{ marginTop: '32px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
+              {/* Active Cycle Guideline Note */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', background: 'rgba(255,165,2,0.08)', border: '1px solid rgba(255,165,2,0.25)', padding: '12px 14px', borderRadius: '10px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '1rem', lineHeight: 1, flexShrink: 0, marginTop: '1px' }}>⚠️</span>
+                <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#FFA502' }}>No active cycle?</strong> If dashboards appear empty or locked, please log in as <strong style={{ color: '#FF4757' }}>Admin</strong> first and start a new Performance Cycle from the Admin Dashboard.
+                </p>
+              </div>
               <p style={{ fontSize: '0.75rem', textAlign: 'center', marginBottom: '16px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Quick Demo Access</p>
               <div className="grid grid-3 gap-sm" style={{ marginBottom: '8px' }}>
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => useDemo('employee@demo.nexus.com')} style={{ padding: '8px', fontSize: '0.8rem' }}><Users size={14} style={{ marginRight:'4px' }}/> Employee 1</button>

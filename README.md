@@ -25,6 +25,8 @@ The platform features three distinct user journeys. You can seamlessly switch be
 
 *(Note: The system supports an auto-signup fallback for demo purposes. Any custom email used during the hackathon demo will automatically register as an Employee account).*
 
+> ⚠️ **Important — Active Cycle Required:** If employee/manager dashboards appear empty or goal sheets are locked, please **log in as Admin first** and create/start a new Performance Cycle from the Admin Dashboard. All goal operations depend on an active cycle being present in the system.
+
 ---
 
 ## 🏗️ Architecture & Technologies Used

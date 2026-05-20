@@ -43,6 +43,7 @@ This guide maps the **Nexus Performance Platform** directly against the five cor
 *   **Hackathon Time-cycle Strategy (The Demo Time Machine)**: 
     *   *Challenge*: Judges cannot test year-long performance milestones (Goal Setting in May, Q1 in July, Q2 in October) in a 5-minute review.
     *   *Solution*: We built a functional **"Admin Demo Time Machine"** at the top of the Admin Dashboard. Judges can warp the system's global Firestore timestamps forward/backward, immediately triggering real-time UI reactions, opened check-in windows, locked goal sheets, and compliance logs.
+    *   ⚠️ *Pre-requisite*: If no active Performance Cycle exists (e.g. fresh database), **log in as Admin first** and create/start a cycle. All employee and manager workflows depend on an active cycle being present.
 
 ---
 

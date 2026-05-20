@@ -288,7 +288,9 @@ export default function Login() {
           opacity: showLogin ? 1 : 0,
           transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
           width: '100%',
-          maxWidth: '450px'
+          maxWidth: '450px',
+          maxHeight: '95vh',
+          overflowY: 'auto'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
             <h3 style={{ margin: 0 }}>Portal Access</h3>

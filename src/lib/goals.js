@@ -144,9 +144,33 @@ export async function pushSharedGoalToTeam(managerId, cycleId, teamMembers, goal
       if (!snap.empty) {
         const sheetDoc = snap.docs[0];
         const existingGoals = sheetDoc.data().goals || [];
-        if (!existingGoals.find(g => g.id === sharedId)) {
+        const hasGoalId = existingGoals.find(g => g.id === sharedId);
+        const hasGoalTitle = existingGoals.find(g => g.title?.trim().toLowerCase() === goalData.title?.trim().toLowerCase());
+        
+        if (!hasGoalId && !hasGoalTitle) {
+          const currentStatus = sheetDoc.data().status || 'draft';
+          const newStatus = (currentStatus === 'approved' || currentStatus === 'submitted') ? 'draft' : currentStatus;
           batch.update(sheetDoc.ref, {
             goals: [...existingGoals, newGoal],
+            status: newStatus,
+            updatedAt: serverTimestamp()
+          });
+        } else if (hasGoalTitle && !hasGoalTitle.isShared) {
+          const currentStatus = sheetDoc.data().status || 'draft';
+          const newStatus = (currentStatus === 'approved' || currentStatus === 'submitted') ? 'draft' : currentStatus;
+          const updatedGoals = existingGoals.map(g => {
+            if (g.title?.trim().toLowerCase() === goalData.title?.trim().toLowerCase()) {
+              return {
+                ...g,
+                ...newGoal,
+                weightage: g.weightage || 10
+              };
+            }
+            return g;
+          });
+          batch.update(sheetDoc.ref, {
+            goals: updatedGoals,
+            status: newStatus,
             updatedAt: serverTimestamp()
           });
         }

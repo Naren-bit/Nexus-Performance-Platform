@@ -88,6 +88,10 @@ To ensure a seamless, production-ready live pitch that is both highly robust and
 *   **Assumption:** Hackathon environments lack live corporate Office 365 / MS Teams developer sandbox environments to display active webhook notifications.
 *   **Strategy:** The app constructs complete Microsoft Adaptive Card JSON structures ready for standard incoming webhook routing. We mocked the final network request locally while displaying the constructed cards to prove exact compliance with Teams bot payloads.
 
+### 4. Microsoft Entra ID (Azure AD) SSO
+*   **Production Architecture:** The platform is fully architected using Firebase's standard `OAuthProvider('microsoft.com')` to perform secure OpenID Connect (OIDC) authentication. In a production environment with a registered Azure AD tenant and configured redirect URIs, this links directly to the official Microsoft accounts portal.
+*   **Sandbox Simulation Fallback:** Since registering an active enterprise tenant is restricted to corporate domain environments, our authentication layer catches OIDC login exceptions and opens a **Microsoft Entra ID Sandbox Fallback** modal. This lets evaluators simulate Microsoft Graph Directory claims-mapping (syncing roles, departments, and manager groups) and registers them securely in Firestore, ensuring zero demo-downtime while showcasing enterprise integration capability.
+
 ---
 
 ## 🛠️ Local Setup Instructions

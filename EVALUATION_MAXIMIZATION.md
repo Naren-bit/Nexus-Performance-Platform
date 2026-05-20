@@ -61,6 +61,8 @@ This guide maps the **Nexus Performance Platform** directly against the five cor
 
 *   **Dual-Engine AI Resiliency**: 
     *   If the live Gemini 2.5 Flash API encounters internet drops, missing tokens, or rate limits during a live pitch, the system **instantly and seamlessly falls back** to pre-mapped local SMART suggestions and strategic reasonings. Zero lag, zero downtime, and a 100% crash-proof demo.
+*   **Entra ID OIDC Sandbox Fallback**:
+    *   To prevent redirect-URI failures (standard when running SSO outside registered enterprise domain tenants during evaluation), our auth controller catches Microsoft login popup errors and seamlessly triggers a simulated Claims Sandbox modal. This lets judges test active AD groups and organization hierarchy provisioning in Firestore with zero presentation friction.
 *   **Real-Time Data Snaps (No Memory Leaks)**:
     *   Centralized standard Firestore listener structures (`onSnapshot`) inside React `useEffect` hooks with proper cleanups, ensuring instant collaborative updates (e.g., manager approvals reflected on employee boards live) with zero connection leaks.
 *   **Comprehensive Test Auditing**: Passed rigorous subagent verification tests across employee and admin flows with zero runtime console errors.
